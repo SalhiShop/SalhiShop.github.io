@@ -8,6 +8,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
@@ -21,30 +22,43 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    const profilePic = document.getElementById("profilePic");
-    const userName = document.getElementById("userName");
     const loginBtn = document.getElementById("loginBtn");
     const logoutBtn = document.getElementById("logoutBtn");
+    const displayName = document.getElementById("displayName");
+    const displayEmail = document.getElementById("displayEmail");
 
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (user && user.emailVerified) {
-        profilePic.src = user.photoURL || "default-avatar.png";
-        userName.innerText = user.displayName || user.email;
+        // Récupérer le pseudo depuis Firestore
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        const pseudo = docSnap.exists() ? docSnap.data().pseudo : user.email;
+
+        displayName.innerText = pseudo;
+        displayEmail.innerText = user.email;
         loginBtn.style.display = "none";
         logoutBtn.style.display = "inline-block";
       } else {
-        profilePic.src = "default-avatar.png";
-        userName.innerText = "Invité";
+        displayName.innerText = "Invité";
+        displayEmail.innerText = "";
         loginBtn.style.display = "inline-block";
         logoutBtn.style.display = "none";
       }
     });
 
     function logout() {
-      signOut(auth).then(() => {
-        alert("Déconnecté avec succès !");
-      });
+      signOut(auth).then(() => alert("Déconnecté avec succès !"));
+    }
+
+    function passerCommande() {
+      const user = auth.currentUser;
+      if (!user || !user.emailVerified) {
+        alert("Vous devez être connecté et avoir vérifié votre email pour passer une commande.");
+        return;
+      }
+      alert("Commande en cours !");
     }
   </script>
 </head>
@@ -52,8 +66,8 @@
   <header class="header">
     <h1>Salhi Shop</h1>
     <div>
-      <img id="profilePic" src="default-avatar.png" alt="Profil" class="avatar">
-      <span id="userName">Invité</span>
+      <span id="displayName">Invité</span><br>
+      <small id="displayEmail"></small><br>
       <button id="loginBtn" onclick="window.location.href='login.html'">Se connecter</button>
       <button id="logoutBtn" onclick="logout()" style="display:none;">Se déconnecter</button>
     </div>
@@ -68,18 +82,5 @@
       <button onclick="passerCommande()">Commander</button>
     </section>
   </main>
-
-  <script>
-    function passerCommande() {
-      const auth = firebase.auth();
-      const user = auth.currentUser;
-      if (!user || !user.emailVerified) {
-        alert("Vous devez être connecté et avoir vérifié votre email pour passer une commande.");
-        return;
-      }
-      alert("Commande en cours !");
-      // Ici tu peux ajouter l’intégration Firebase pour les commandes
-    }
-  </script>
 </body>
 </html>
