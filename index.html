@@ -4,7 +4,93 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Salhi Shop</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Style global */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #e0f7fa;
+      color: #004d40;
+    }
+
+    /* Barre principale cyan */
+    header {
+      background-color: #00bcd4;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    header h1 {
+      margin: 0;
+    }
+
+    header div {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    button {
+      background-color: #004d40;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background-color: #00796b;
+    }
+
+    /* Barre en dessous */
+    nav {
+      background-color: #00acc1;
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      padding: 10px 0;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    /* Contenu principal */
+    main {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 70vh;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+
+    #commandes button {
+      margin-top: 10px;
+    }
+
+    small {
+      display: block;
+      font-size: 0.8em;
+      color: #004d40;
+    }
+  </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
@@ -41,28 +127,18 @@
         displayEmail.innerText = user.email;
         loginBtn.style.display = "none";
         logoutBtn.style.display = "inline-block";
-
-        // Contenu centré non nécessaire si connecté
-        mainContent.style.justifyContent = "flex-start";
       } else {
         displayName.innerText = "";
         displayEmail.innerText = "";
         loginBtn.style.display = "inline-block";
         logoutBtn.style.display = "none";
-
-        // Centrer le bouton si pas connecté
-        mainContent.style.display = "flex";
-        mainContent.style.justifyContent = "center";
-        mainContent.style.alignItems = "center";
-        mainContent.style.height = "70vh";
       }
     });
 
-    // Ajouter logout au scope global pour que le bouton fonctionne
-    window.logout = function() {
+    function logout() {
       signOut(auth)
         .then(() => alert("Déconnecté avec succès !"))
-        .catch(err => alert("Erreur : " + err.message));
+        .catch((err) => alert("Erreur: " + err.message));
     }
 
     function passerCommande() {
@@ -76,26 +152,29 @@
   </script>
 </head>
 <body>
-  <header class="header">
+  <header>
     <h1>Salhi Shop</h1>
     <div>
-      <span id="displayName"></span><br>
-      <small id="displayEmail"></small><br>
+      <span id="displayName"></span>
       <button id="loginBtn" onclick="window.location.href='login.html'">Se connecter</button>
       <button id="logoutBtn" onclick="logout()" style="display:none;">Se déconnecter</button>
     </div>
   </header>
 
-  <main id="mainContent" class="content">
-    <div>
-      <h2>Bienvenue sur Salhi Shop !</h2>
-      <p>Découvrez nos produits.</p>
+  <nav>
+    <a href="#">Accueil</a>
+    <a href="#">Commande</a>
+    <a href="#">Info</a>
+  </nav>
 
-      <section id="commandes">
-        <h3>Passer une commande</h3>
-        <button onclick="passerCommande()">Commander</button>
-      </section>
-    </div>
+  <main id="mainContent">
+    <h2>Bienvenue sur Salhi Shop !</h2>
+    <p>Découvrez nos produits et promotions.</p>
+
+    <section id="commandes">
+      <h3>Passer une commande</h3>
+      <button onclick="passerCommande()">Commander</button>
+    </section>
   </main>
 </body>
 </html>
