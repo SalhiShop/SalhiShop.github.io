@@ -25,10 +25,10 @@
     <p id="message"></p>
   </section>
 
-  <!-- 🔥 Script Firebase intégré -->
+  <!-- 🔥 Script Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } 
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } 
       from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
     // Config Firebase
@@ -42,7 +42,7 @@
       measurementId: "G-34G9453E7H"
     };
 
-    // Initialisation Firebase
+    // Init Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
@@ -53,28 +53,56 @@
     const loginBtn = document.getElementById("login");
     const message = document.getElementById("message");
 
-    // Créer un compte
+    // Fonction pour traduire les erreurs Firebase
+    function afficherErreur(code) {
+      switch(code) {
+        case "auth/invalid-email":
+          return "L'adresse email n'est pas valide.";
+        case "auth/missing-password":
+        case "auth/weak-password":
+          return "Le mot de passe doit contenir au moins 6 caractères.";
+        case "auth/email-already-in-use":
+          return "Un compte existe déjà avec cet email.";
+        case "auth/user-not-found":
+          return "Aucun utilisateur trouvé avec cet email.";
+        case "auth/wrong-password":
+          return "Mot de passe incorrect.";
+        default:
+          return "Une erreur est survenue, merci de réessayer.";
+      }
+    }
+
+    // Inscription avec vérification email
     signupBtn.addEventListener("click", () => {
       createUserWithEmailAndPassword(auth, email.value, password.value)
         .then((userCredential) => {
-          message.textContent = "✅ Compte créé avec succès !";
-          message.style.color = "green";
+          const user = userCredential.user;
+          sendEmailVerification(user).then(() => {
+            message.textContent = "✅ Compte créé. Vérifiez votre boîte mail pour confirmer votre adresse.";
+            message.style.color = "green";
+          });
         })
         .catch((error) => {
-          message.textContent = "❌ " + error.message;
+          message.textContent = "❌ " + afficherErreur(error.code);
           message.style.color = "red";
         });
     });
 
-    // Connexion
+    // Connexion (seulement si email vérifié)
     loginBtn.addEventListener("click", () => {
       signInWithEmailAndPassword(auth, email.value, password.value)
         .then((userCredential) => {
-          message.textContent = "✅ Connecté ! Bienvenue " + userCredential.user.email;
-          message.style.color = "green";
+          const user = userCredential.user;
+          if (user.emailVerified) {
+            message.textContent = "✅ Connecté ! Bienvenue " + user.email;
+            message.style.color = "green";
+          } else {
+            message.textContent = "⚠️ Merci de vérifier votre adresse email avant de vous connecter.";
+            message.style.color = "orange";
+          }
         })
         .catch((error) => {
-          message.textContent = "❌ " + error.message;
+          message.textContent = "❌ " + afficherErreur(error.code);
           message.style.color = "red";
         });
     });
