@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Connexion - Salhi Shop</title>
-<link rel="stylesheet" href="style.css">
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
@@ -89,28 +88,29 @@ toggleBtn.addEventListener("click", () => {
 });
 </script>
 </head>
-<body>
-  <header>
-    <div class="navbar">
-      <h1>Salhi Shop</h1>
-    </div>
-  </header>
+<body style="margin:0;font-family:Arial,sans-serif;background-color:#f4f4f4;">
 
-  <main>
-    <div class="login-container">
-      <h2 id="formTitle">Connexion</h2>
-      <form id="loginForm" data-action="login">
-        <div id="pseudoField" style="display:none;">
-          <input type="text" name="pseudo" placeholder="Pseudo" />
-        </div>
-        <input type="email" name="email" placeholder="Email" required />
-        <input type="password" name="password" placeholder="Mot de passe" required />
-        <div id="errorMsg"></div>
-        <button type="submit" id="submitBtn">Se connecter</button>
-        <button type="button" id="forgotBtn" class="link-btn">Mot de passe oublié ?</button>
-        <button type="button" id="toggleBtn" class="link-btn">Créer un compte</button>
-      </form>
-    </div>
-  </main>
+<header style="display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background-color:#333;color:white;">
+  <h1 style="margin:0;font-size:24px;">Salhi Shop</h1>
+  <button onclick="window.location.href='index.html'" style="background:#555;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;">Retour</button>
+</header>
+
+<main style="display:flex;justify-content:center;align-items:center;height:80vh;">
+  <div style="background:white;padding:30px;border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,0.2);width:300px;text-align:center;">
+    <h2 id="formTitle">Connexion</h2>
+    <form id="loginForm" data-action="login">
+      <div id="pseudoField" style="display:none;margin-bottom:10px;">
+        <input type="text" name="pseudo" placeholder="Pseudo" style="width:100%;padding:8px;margin-bottom:10px;border-radius:4px;border:1px solid #ccc;"/>
+      </div>
+      <input type="email" name="email" placeholder="Email" required style="width:100%;padding:8px;margin-bottom:10px;border-radius:4px;border:1px solid #ccc;"/>
+      <input type="password" name="password" placeholder="Mot de passe" required style="width:100%;padding:8px;margin-bottom:10px;border-radius:4px;border:1px solid #ccc;"/>
+      <div id="errorMsg" style="color:red;margin-bottom:10px;"></div>
+      <button type="submit" id="submitBtn" style="width:100%;padding:10px;background:#28a745;color:white;border:none;border-radius:4px;cursor:pointer;margin-bottom:10px;">Se connecter</button>
+      <button type="button" id="forgotBtn" style="background:none;border:none;color:#007bff;cursor:pointer;margin-bottom:10px;">Mot de passe oublié ?</button><br>
+      <button type="button" id="toggleBtn" style="background:none;border:none;color:#007bff;cursor:pointer;">Créer un compte</button>
+    </form>
+  </div>
+</main>
+
 </body>
 </html>
