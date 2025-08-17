@@ -5,176 +5,175 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Salhi Shop</title>
   <style>
-    /* Style global */
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background-color: #e0f7fa;
-      color: #004d40;
+      background-color: #f0f4f8;
+      color: #333;
     }
-
-    /* Barre principale cyan */
-    header {
+    .header {
       background-color: #00bcd4;
       color: white;
+      padding: 15px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
-
-    header h1 {
-      margin: 0;
-    }
-
-    header div {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    button {
-      background-color: #004d40;
-      color: white;
+    .header button {
+      background-color: white;
+      color: #00bcd4;
       border: none;
       padding: 8px 12px;
       cursor: pointer;
       border-radius: 5px;
+      margin-left: 10px;
+      font-weight: bold;
     }
-
-    button:hover {
-      background-color: #00796b;
+    .header button:hover {
+      background-color: #e0f7fa;
     }
-
-    /* Barre en dessous */
-    nav {
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .user-info small {
+      display: block;
+      font-size: 0.8em;
+      color: #e0f7fa;
+    }
+    .nav-bar {
       background-color: #00acc1;
       display: flex;
       justify-content: center;
       gap: 30px;
       padding: 10px 0;
-    }
-
-    nav a {
-      color: white;
-      text-decoration: none;
       font-weight: bold;
+      color: white;
     }
-
-    nav a:hover {
-      text-decoration: underline;
+    .nav-bar a {
+      text-decoration: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
     }
-
-    /* Contenu principal */
-    main {
+    .nav-bar a:hover {
+      background-color: #008b99;
+    }
+    .content {
       display: flex;
       justify-content: center;
       align-items: center;
-      flex-direction: column;
-      height: 70vh;
+      height: calc(100vh - 120px);
       text-align: center;
+      padding: 20px;
     }
-
-    h2 {
-      font-size: 2em;
+    .content h2 {
+      color: #00bcd4;
       margin-bottom: 10px;
     }
-
-    #commandes button {
-      margin-top: 10px;
+    .content button {
+      background-color: #00bcd4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 5px;
+      margin-top: 15px;
+      font-weight: bold;
     }
-
-    small {
-      display: block;
-      font-size: 0.8em;
-      color: #004d40;
+    .content button:hover {
+      background-color: #0097a7;
     }
   </style>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
-      authDomain: "salhishop-1.firebaseapp.com",
-      projectId: "salhishop-1",
-      storageBucket: "salhishop-1.firebasestorage.app",
-      messagingSenderId: "784629559774",
-      appId: "1:784629559774:web:388f9ca4c33e90d6fcad4f",
-      measurementId: "G-34G9453E7H"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    const loginBtn = document.getElementById("loginBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const displayName = document.getElementById("displayName");
-    const displayEmail = document.getElementById("displayEmail");
-    const mainContent = document.getElementById("mainContent");
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user && user.emailVerified) {
-        // Récupérer le pseudo depuis Firestore
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        const pseudo = docSnap.exists() ? docSnap.data().pseudo : user.email;
-
-        displayName.innerText = pseudo;
-        displayEmail.innerText = user.email;
-        loginBtn.style.display = "none";
-        logoutBtn.style.display = "inline-block";
-      } else {
-        displayName.innerText = "";
-        displayEmail.innerText = "";
-        loginBtn.style.display = "inline-block";
-        logoutBtn.style.display = "none";
-      }
-    });
-
-    function logout() {
-      signOut(auth)
-        .then(() => alert("Déconnecté avec succès !"))
-        .catch((err) => alert("Erreur: " + err.message));
-    }
-
-    function passerCommande() {
-      const user = auth.currentUser;
-      if (!user || !user.emailVerified) {
-        alert("Vous devez être connecté et avoir vérifié votre email pour passer une commande.");
-        return;
-      }
-      alert("Commande en cours !");
-    }
-  </script>
 </head>
 <body>
-  <header>
+  <header class="header">
     <h1>Salhi Shop</h1>
-    <div>
+    <div class="user-info">
       <span id="displayName"></span>
+      <small id="displayEmail"></small>
       <button id="loginBtn" onclick="window.location.href='login.html'">Se connecter</button>
       <button id="logoutBtn" onclick="logout()" style="display:none;">Se déconnecter</button>
     </div>
   </header>
 
-  <nav>
-    <a href="#">Accueil</a>
-    <a href="#">Commande</a>
-    <a href="#">Info</a>
+  <nav class="nav-bar">
+    <a href="index.html">Accueil</a>
+    <a href="#commandes">Commande</a>
+    <a href="#info">Info</a>
   </nav>
 
-  <main id="mainContent">
-    <h2>Bienvenue sur Salhi Shop !</h2>
-    <p>Découvrez nos produits et promotions.</p>
+  <main id="mainContent" class="content">
+    <div>
+      <h2>Bienvenue sur Salhi Shop !</h2>
+      <p>Découvrez nos produits et promotions.</p>
 
-    <section id="commandes">
-      <h3>Passer une commande</h3>
-      <button onclick="passerCommande()">Commander</button>
-    </section>
+      <section id="commandes">
+        <h3>Passer une commande</h3>
+        <button onclick="passerCommande()">Commander</button>
+      </section>
+    </div>
   </main>
+
+  <script type="module">
+    document.addEventListener("DOMContentLoaded", () => {
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+      import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+      import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
+        authDomain: "salhishop-1.firebaseapp.com",
+        projectId: "salhishop-1",
+        storageBucket: "salhishop-1.firebasestorage.app",
+        messagingSenderId: "784629559774",
+        appId: "1:784629559774:web:388f9ca4c33e90d6fcad4f",
+        measurementId: "G-34G9453E7H"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      const loginBtn = document.getElementById("loginBtn");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const displayName = document.getElementById("displayName");
+      const displayEmail = document.getElementById("displayEmail");
+
+      onAuthStateChanged(auth, async (user) => {
+        if (user && user.emailVerified) {
+          const docRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+          const pseudo = docSnap.exists() ? docSnap.data().pseudo : user.email;
+
+          displayName.innerText = pseudo;
+          displayEmail.innerText = user.email;
+          loginBtn.style.display = "none";
+          logoutBtn.style.display = "inline-block";
+        } else {
+          displayName.innerText = "";
+          displayEmail.innerText = "";
+          loginBtn.style.display = "inline-block";
+          logoutBtn.style.display = "none";
+        }
+      });
+
+      window.logout = function() {
+        signOut(auth)
+          .then(() => alert("Déconnecté avec succès !"))
+          .catch(err => alert("Erreur : " + err.message));
+      }
+
+      window.passerCommande = function() {
+        const user = auth.currentUser;
+        if (!user || !user.emailVerified) {
+          alert("Vous devez être connecté et avoir vérifié votre email pour passer une commande.");
+          return;
+        }
+        alert("Commande en cours !");
+      }
+    });
+  </script>
 </body>
 </html>
