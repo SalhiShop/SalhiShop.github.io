@@ -4,174 +4,58 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Salhi Shop</title>
-
-  <!-- Styles intégrés (cyan / moderne) -->
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background-color: #f0f7fa;
-      color: #03363a;
-    }
-
-    /* Header principal */
-    .header {
-      background-color: #00bcd4;
-      color: white;
-      padding: 14px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-    }
-    .header h1 { margin: 0; font-size: 1.4rem; }
-
-    .user-block {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      color: white;
-    }
-
-    .pseudo {
-      font-weight: 700;
-      background: rgba(255,255,255,0.08);
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 0.95rem;
-    }
-
-    .email-small {
-      display: block;
-      font-size: 0.80rem;
-      color: rgba(255,255,255,0.9);
-      margin-top: -6px;
-    }
-
-    .btn-plain {
-      background: white;
-      color: #00bcd4;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 700;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-    }
-    .btn-plain:hover { transform: translateY(-1px); }
-
-    .btn-logout {
-      background: #f44336;
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 700;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-    }
-    .btn-logout:hover { transform: translateY(-1px); }
-
-    /* Barre secondaire */
-    .secondary-nav {
-      background: #00acc1;
-      display: flex;
-      justify-content: center;
-      gap: 28px;
-      padding: 10px 0;
-      color: white;
-      font-weight: 700;
-    }
-    .secondary-nav a {
-      color: white;
-      text-decoration: none;
-      padding: 6px 12px;
-      border-radius: 8px;
-    }
-    .secondary-nav a:hover { background: rgba(255,255,255,0.08); }
-
-    /* Contenu principal centré */
-    main {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: calc(100vh - 140px);
-      text-align: center;
-      padding: 20px;
-    }
-
-    .card {
-      background: white;
-      padding: 28px;
-      border-radius: 12px;
-      box-shadow: 0 12px 30px rgba(2, 50, 50, 0.06);
-      max-width: 780px;
-      width: 100%;
-    }
-
-    .card h2 {
-      color: #00bcd4;
-      margin: 0 0 8px 0;
-      font-size: 1.8rem;
-    }
-    .card p { margin: 0 0 16px 0; color: #275a5b; }
-
-    .action-btn {
-      background: #00bcd4;
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 700;
-    }
-    .action-btn:hover { background: #0097a7; transform: translateY(-2px); }
-
-    @media (max-width: 640px) {
-      .header h1 { font-size: 1.1rem; }
-      .card { padding: 20px; }
-      .card h2 { font-size: 1.4rem; }
-      .secondary-nav { gap: 14px; font-size: 0.95rem; }
-    }
-  </style>
-
-  <!-- Firebase compat CDN (pas d'import ES modules) -->
+  <!-- Firebase compat CDN (fonctionne localement) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
 </head>
-<body>
+<body style="margin:0;font-family:Arial,Helvetica,sans-serif;background:#f0f7fa;color:#03363a;">
 
-  <!-- Header -->
-  <header class="header">
-    <h1>Salhi Shop</h1>
+  <!-- Header principal (inline styles) -->
+  <header style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#00bcd4;color:white;box-shadow:0 2px 6px rgba(0,0,0,0.12);">
+    <h1 style="margin:0;font-size:1.4rem;">Salhi Shop</h1>
 
-    <div class="user-block">
-      <div id="pseudoWrap" class="pseudo" style="display:none;"></div>
-      <div id="emailWrap" class="email-small" style="display:none;"></div>
+    <!-- user block: pseudo (centered), email under, puis boutons -->
+    <div id="userBlock" style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+      <!-- pseudo -->
+      <div id="pseudoWrap" style="display:none;font-weight:700;background:rgba(255,255,255,0.08);padding:6px 12px;border-radius:999px;font-size:0.95rem;color:white;"></div>
+      <!-- email under pseudo -->
+      <div id="emailWrap" style="display:none;font-size:0.80rem;color:rgba(255,255,255,0.95);margin-top:-4px;"></div>
 
-      <button id="loginBtn" class="btn-plain" onclick="window.location.href='login.html'">Se connecter</button>
-      <button id="logoutBtn" class="btn-logout" style="display:none;">Se déconnecter</button>
+      <!-- boutons (même style) -->
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <button id="loginBtn"
+                style="background:white;color:#00bcd4;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.12);"
+                onclick="window.location.href='login.html'">
+          Se connecter
+        </button>
+
+        <button id="logoutBtn"
+                style="display:none;background:white;color:#00bcd4;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.12);">
+          Se déconnecter
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- Barre secondaire -->
-  <nav class="secondary-nav">
-    <a href="index.html">Accueil</a>
-    <a href="#commandes">Commande</a>
-    <a href="#info">Info</a>
+  <!-- Barre secondaire (inline styles) -->
+  <nav style="display:flex;justify-content:center;gap:28px;padding:10px 0;background:#00acc1;font-weight:700;color:white;">
+    <a href="index.html" style="color:white;text-decoration:none;padding:6px 12px;border-radius:8px;">Accueil</a>
+    <a href="#commandes" style="color:white;text-decoration:none;padding:6px 12px;border-radius:8px;">Commande</a>
+    <a href="#info" style="color:white;text-decoration:none;padding:6px 12px;border-radius:8px;">Info</a>
   </nav>
 
-  <!-- Contenu -->
-  <main>
-    <div class="card">
-      <h2>Bienvenue sur Salhi Shop !</h2>
-      <p>Découvrez nos produits et promotions.</p>
+  <!-- Contenu principal (inline styles) -->
+  <main style="display:flex;justify-content:center;align-items:center;min-height:calc(100vh - 140px);padding:20px;text-align:center;">
+    <div style="background:white;padding:28px;border-radius:12px;box-shadow:0 12px 30px rgba(2,50,50,0.06);max-width:780px;width:100%;">
+      <h2 style="color:#00bcd4;margin:0 0 8px 0;font-size:1.8rem;">Bienvenue sur Salhi Shop !</h2>
+      <p style="margin:0 0 16px 0;color:#275a5b;">Découvrez nos produits et promotions.</p>
 
-      <section id="commandes">
-        <h3>Passer une commande</h3>
-        <button class="action-btn" id="orderBtn">Commander</button>
+      <section id="commandes" style="margin-top:12px;">
+        <h3 style="margin:0 0 8px 0;">Passer une commande</h3>
+        <button id="orderBtn" style="background:#00bcd4;color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;">
+          Commander
+        </button>
       </section>
 
       <section id="info" style="margin-top:18px;color:#567;font-size:0.95rem;">
@@ -180,9 +64,9 @@
     </div>
   </main>
 
-  <!-- Logique Firebase (compat) -->
+  <!-- Script Firebase + logique (compat) -->
   <script>
-    // Initialise Firebase (compat)
+    // config Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
       authDomain: "salhishop-1.firebaseapp.com",
@@ -193,19 +77,20 @@
       measurementId: "G-34G9453E7H"
     };
 
+    // init compat
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // DOM éléments
+    // DOM elements
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const pseudoWrap = document.getElementById('pseudoWrap');
     const emailWrap = document.getElementById('emailWrap');
     const orderBtn = document.getElementById('orderBtn');
 
-    // Fonction déconnexion exposée globalement
-    window.logout = async function() {
+    // logout global
+    window.logout = async function () {
       try {
         await auth.signOut();
         alert('Déconnecté avec succès !');
@@ -214,22 +99,22 @@
       }
     };
 
-    // Fonction de commande (vérifie emailVerified)
-    window.passerCommande = function() {
+    // commande
+    window.passerCommande = function () {
       const user = auth.currentUser;
       if (!user || !user.emailVerified) {
         alert('Vous devez être connecté et avoir vérifié votre email pour passer une commande.');
         return;
       }
-      alert('Commande en cours (implémenter sauvegarde si besoin).');
+      alert('Commande en cours (à implémenter).');
     };
 
     orderBtn.addEventListener('click', () => window.passerCommande());
 
-    // Surveille l'état de connexion
+    // onAuthStateChanged
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        // récupère pseudo depuis Firestore si présent
+        // récupère pseudo depuis Firestore si existant
         let pseudo = null;
         try {
           const docRef = db.collection('users').doc(user.uid);
@@ -239,29 +124,31 @@
             if (data && data.pseudo) pseudo = data.pseudo;
           }
         } catch (err) {
-          console.warn('Erreur récupération Firestore pseudo :', err);
+          console.warn('Erreur récupération pseudo Firestore :', err);
         }
 
         const shownName = pseudo || user.displayName || (user.email ? user.email.split('@')[0] : 'Utilisateur');
         pseudoWrap.textContent = shownName;
-        pseudoWrap.style.display = 'inline-block';
+        pseudoWrap.style.display = 'block';
 
         emailWrap.textContent = user.email || '';
-        emailWrap.style.display = user.email ? 'inline-block' : 'none';
+        emailWrap.style.display = user.email ? 'block' : 'none';
 
+        // toggle boutons (se connecter disparaît, se déconnecter apparaît)
         loginBtn.style.display = 'none';
         logoutBtn.style.display = 'inline-block';
+
+        // Attache logout si cliqué
+        logoutBtn.onclick = window.logout;
       } else {
-        // pas connecté
+        // Pas connecté
         pseudoWrap.style.display = 'none';
         emailWrap.style.display = 'none';
         loginBtn.style.display = 'inline-block';
         logoutBtn.style.display = 'none';
+        logoutBtn.onclick = null;
       }
     });
-
-    // Assure que logout appelle la fonction globale (si bouton inline utilisé)
-    logoutBtn.addEventListener('click', window.logout);
   </script>
 </body>
 </html>
