@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="style.css">
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
@@ -21,24 +21,46 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
+    const profilePic = document.getElementById("profilePic");
+    const userName = document.getElementById("userName");
+    const logoutBtn = document.getElementById("logoutBtn");
+
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         window.location.href = "login.html";
         return;
       }
-      const photoURL = user.photoURL || "default-avatar.png";
-      document.getElementById("profilePic").src = photoURL;
-      document.getElementById("userName").innerText = user.displayName || user.email;
+
+      profilePic.src = user.photoURL || "default-avatar.png";
+      userName.innerText = user.displayName || user.email;
     });
+
+    window.logout = () => {
+      signOut(auth).then(() => {
+        window.location.href = "login.html";
+      });
+    };
   </script>
 </head>
 <body>
-  <div class="header">
+  <div class="header" style="background-color: cyan; display:flex; justify-content: space-between; padding: 10px;">
     <h1>Salhi Shop</h1>
     <div class="profile">
-      <img id="profilePic" src="default-avatar.png" alt="Photo de profil">
+      <img id="profilePic" src="default-avatar.png" alt="Photo de profil" style="width:40px;height:40px;border-radius:50%;">
       <span id="userName"></span>
+      <button id="logoutBtn" onclick="logout()">Se déconnecter</button>
     </div>
+  </div>
+
+  <div class="menu">
+    <button>Accueil</button>
+    <button>Commandes</button>
+    <button>Produits</button>
+  </div>
+
+  <div class="content">
+    <h2>Bienvenue sur Salhi Shop !</h2>
+    <p>Vous êtes connecté.</p>
   </div>
 </body>
 </html>
