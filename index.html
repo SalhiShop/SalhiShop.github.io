@@ -3,93 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Salhi Shop</title>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
-  authDomain: "salhishop-1.firebaseapp.com",
-  projectId: "salhishop-1",
-  storageBucket: "salhishop-1.firebasestorage.app",
-  messagingSenderId: "784629559774",
-  appId: "1:784629559774:web:388f9ca4c33e90d6fcad4f",
-  measurementId: "G-34G9453E7H"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const displayName = document.getElementById("displayName");
-const displayEmail = document.getElementById("displayEmail");
-const mainContent = document.getElementById("mainContent");
-
-onAuthStateChanged(auth, async (user) => {
-  if (user && user.emailVerified) {
-    const docRef = doc(db, "users", user.uid);
-    const docSnap = await getDoc(docRef);
-    const pseudo = docSnap.exists() ? docSnap.data().pseudo : user.email;
-
-    displayName.innerText = pseudo;
-    displayEmail.innerText = user.email;
-    loginBtn.style.display = "none";
-    logoutBtn.style.display = "inline-block";
-
-    mainContent.style.justifyContent = "flex-start";
-  } else {
-    displayName.innerText = "";
-    displayEmail.innerText = "";
-    loginBtn.style.display = "inline-block";
-    logoutBtn.style.display = "none";
-
-    mainContent.style.display = "flex";
-    mainContent.style.justifyContent = "center";
-    mainContent.style.alignItems = "center";
-    mainContent.style.height = "70vh";
-  }
-});
-
-function logout() {
-  signOut(auth).then(() => alert("Déconnecté avec succès !"));
-}
-
-function passerCommande() {
-  const user = auth.currentUser;
-  if (!user || !user.emailVerified) {
-    alert("Vous devez être connecté et avoir vérifié votre email pour passer une commande.");
-    return;
-  }
-  alert("Commande en cours !");
-}
-</script>
+<title>Accueil - Salhi Shop</title>
 </head>
-<body style="margin:0;font-family:Arial,sans-serif;background-color:#f4f4f4;">
+<body style="margin:0;font-family:Arial,sans-serif;background:#e0f7fa;">
 
-<header style="display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background-color:#333;color:white;">
+<header style="display:flex;justify-content:space-between;align-items:center;background:#00bcd4;padding:10px 20px;color:white;">
   <h1 style="margin:0;font-size:24px;">Salhi Shop</h1>
-  <div>
-    <span id="displayName" style="font-weight:bold;"></span><br>
-    <small id="displayEmail"></small><br>
-    <button id="loginBtn" onclick="window.location.href='login.html'" style="background:#28a745;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;">Se connecter</button>
-    <button id="logoutBtn" onclick="logout()" style="display:none;background:#dc3545;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;">Se déconnecter</button>
-  </div>
+  <button onclick="window.location.href='login.html'" style="background:white;color:#00bcd4;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,0.3);">Connexion</button>
 </header>
 
-<main id="mainContent" style="padding:20px;">
-  <div>
-    <h2>Bienvenue sur Salhi Shop !</h2>
-    <p>Découvrez nos produits et promotions.</p>
+<main style="padding:20px;display:flex;flex-wrap:wrap;justify-content:center;gap:20px;">
 
-    <section id="commandes" style="margin-top:20px;">
-      <h3>Passer une commande</h3>
-      <button onclick="passerCommande()" style="padding:10px 15px;background:#007bff;color:white;border:none;border-radius:4px;cursor:pointer;">Commander</button>
-    </section>
+  <!-- Exemple de produit -->
+  <div style="background:white;border-radius:10px;box-shadow:0 5px 15px rgba(0,0,0,0.3);width:200px;text-align:center;padding:15px;">
+    <img src="https://via.placeholder.com/150" alt="Produit 1" style="width:100%;border-radius:10px 10px 0 0;">
+    <h3 style="color:#00bcd4;margin:10px 0 5px;">Produit 1</h3>
+    <p style="margin:5px 0;font-weight:bold;">15€</p>
+    <button style="background:#00bcd4;color:white;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,0.3);">Ajouter</button>
   </div>
+
+  <div style="background:white;border-radius:10px;box-shadow:0 5px 15px rgba(0,0,0,0.3);width:200px;text-align:center;padding:15px;">
+    <img src="https://via.placeholder.com/150" alt="Produit 2" style="width:100%;border-radius:10px 10px 0 0;">
+    <h3 style="color:#00bcd4;margin:10px 0 5px;">Produit 2</h3>
+    <p style="margin:5px 0;font-weight:bold;">20€</p>
+    <button style="background:#00bcd4;color:white;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,0.3);">Ajouter</button>
+  </div>
+
+  <div style="background:white;border-radius:10px;box-shadow:0 5px 15px rgba(0,0,0,0.3);width:200px;text-align:center;padding:15px;">
+    <img src="https://via.placeholder.com/150" alt="Produit 3" style="width:100%;border-radius:10px 10px 0 0;">
+    <h3 style="color:#00bcd4;margin:10px 0 5px;">Produit 3</h3>
+    <p style="margin:5px 0;font-weight:bold;">25€</p>
+    <button style="background:#00bcd4;color:white;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,0.3);">Ajouter</button>
+  </div>
+
 </main>
 
 </body>
