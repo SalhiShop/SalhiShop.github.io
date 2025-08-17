@@ -10,16 +10,17 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-  <!-- inline style (garde ton look cyan) -->
+  <!-- Styles inline -->
   <style>
     body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f0f7fa;color:#03363a}
-    header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#00bcd4;color:white;box-shadow:0 2px 6px rgba(0,0,0,0.12)}
-    header h1{margin:0;font-size:1.4rem}
-    #userArea{display:flex;align-items:center;gap:14px}
-    #userInfo{display:flex;flex-direction:column;align-items:flex-end;line-height:1}
+    .header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#00bcd4;color:white;box-shadow:0 2px 6px rgba(0,0,0,0.12)}
+    .header h1{margin:0;font-size:1.4rem}
+    .user-area{display:flex;align-items:center;gap:14px}
+    .user-info{display:flex;flex-direction:column;align-items:flex-end;line-height:1}
     .btn{background:white;color:#00bcd4;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.12)}
-    .btn:hover{transform:translateY(-1px)}
-    .secondary{display:flex;align-items:center;gap:18px;padding:10px 12px;background:#00acc1;color:white;font-weight:700}
+    .secondary{display:flex;align-items:center;padding:10px 12px;background:#00acc1;color:white;font-weight:700;position:relative}
+    .secondary .left, .secondary .center, .secondary .right{display:flex;align-items:center}
+    .secondary .center { margin: 0 auto; gap:24px; }
     .secondary a{color:white;text-decoration:none;padding:6px 12px;border-radius:8px}
     .secondary a:hover{background:rgba(255,255,255,0.08)}
     main{display:flex;justify-content:center;align-items:center;min-height:calc(100vh - 140px);padding:20px;text-align:center}
@@ -27,36 +28,42 @@
     .title{color:#00bcd4;margin:0 0 8px 0;font-size:1.8rem}
     .action{background:#00bcd4;color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700}
     .action:hover{background:#0097a7}
+    @media (max-width:640px){ .secondary .center { gap:12px } .header h1{font-size:1.1rem} }
   </style>
 </head>
 <body>
 
-  <header>
+  <!-- Header -->
+  <header class="header">
     <h1>Salhi Shop</h1>
-
-    <div id="userArea">
-      <div id="userInfo">
-        <div id="pseudoWrap" style="display:none;font-weight:700;background:rgba(255,255,255,0.08);padding:6px 12px;border-radius:999px;font-size:0.95rem;color:white"></div>
+    <div class="user-area">
+      <div class="user-info">
+        <div id="pseudoWrap" style="display:none;font-weight:700;background:rgba(255,255,255,0.08);padding:6px 10px;border-radius:999px;font-size:0.95rem;color:white"></div>
         <div id="emailWrap" style="display:none;font-size:0.80rem;color:rgba(255,255,255,0.95);margin-top:4px"></div>
       </div>
-
       <div style="display:flex;gap:8px;align-items:center;">
         <button id="loginBtn" class="btn" onclick="window.location.href='login.html'">Se connecter</button>
-        <button id="logoutBtn" class="btn" style="display:none">Se déconnecter</button>
+        <button id="logoutBtn" class="btn" style="display:none;">Se déconnecter</button>
       </div>
     </div>
   </header>
 
-  <!-- Barre secondaire : bouton Admin (sera affiché si admin) + Accueil/Commande/Info -->
+  <!-- Barre secondaire : left (admin placeholder), center (les 3 boutons centrés), right (vide) -->
   <div class="secondary" id="secondaryNav">
-    <!-- admin button inséré dynamiquement dans JS si besoin (placeholder left) -->
-    <span id="adminBtnPlaceholder" style="display:inline-block;"></span>
+    <div class="left" id="adminLeft" style="margin-left:12px;">
+      <!-- Admin button will be injected here -->
+    </div>
 
-    <a href="index.html">Accueil</a>
-    <a href="#commandes">Commande</a>
-    <a href="info.html">Info</a>
+    <div class="center" id="centerLinks">
+      <a href="index.html">Accueil</a>
+      <a href="#commandes">Commande</a>
+      <a href="info.html">Info</a>
+    </div>
+
+    <div class="right" style="width:120px;"></div>
   </div>
 
+  <!-- Contenu -->
   <main>
     <div class="card">
       <h2 class="title">Bienvenue sur Salhi Shop !</h2>
@@ -73,8 +80,9 @@
     </div>
   </main>
 
+  <!-- Script: Firebase compat + logique admin button -->
   <script>
-    // config Firebase (compat)
+    // config Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
       authDomain: "salhishop-1.firebaseapp.com",
@@ -88,12 +96,12 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // éléments DOM
+    // DOM
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const pseudoWrap = document.getElementById('pseudoWrap');
     const emailWrap = document.getElementById('emailWrap');
-    const adminBtnPlaceholder = document.getElementById('adminBtnPlaceholder');
+    const adminLeft = document.getElementById('adminLeft');
     const orderBtn = document.getElementById('orderBtn');
 
     // logout
@@ -113,39 +121,63 @@
     };
     orderBtn.addEventListener('click', () => window.passerCommande());
 
-    // Utilitaire : affiche bouton Admin (on le crée dynamiquement)
-    function showAdminButton(){
-      adminBtnPlaceholder.innerHTML = '<a href="admin.html" style=\"background:white;color:#00bcd4;padding:6px 10px;border-radius:6px;text-decoration:none;font-weight:700;\">Admin</a>';
+    // crée admin doc initial si n'existe pas ET si user est kenzo0025@outlook.fr
+    async function ensureInitialAdminsDoc(userEmail){
+      try{
+        const ref = db.collection('meta').doc('admins');
+        const snap = await ref.get();
+        if(!snap.exists){
+          const low = (userEmail||'').toLowerCase();
+          if(low === 'kenzo0025@outlook.fr'){
+            await ref.set({ emails: [low] }, { merge: true });
+            console.log('meta/admins créé avec', low);
+            return [low];
+          }
+          return [];
+        } else {
+          return snap.data().emails || [];
+        }
+      }catch(e){
+        console.warn('ensureInitialAdminsDoc err', e);
+        return [];
+      }
     }
 
-    // vérifie si user est admin via doc meta/admins (champ emails array)
+    // affiche le bouton Admin (simple link)
+    function showAdminButton(){
+      adminLeft.innerHTML = '<a href="admin.html" style="background:white;color:#00bcd4;padding:6px 10px;border-radius:6px;text-decoration:none;font-weight:700">Admin</a>';
+    }
+    function hideAdminButton(){ adminLeft.innerHTML = ''; }
+
+    // vérifie si l'email est admin (insensible à la casse)
     async function checkAdminsAndUpdateUI(userEmail){
       try{
         const docRef = db.collection('meta').doc('admins');
         const snap = await docRef.get();
-        const admins = snap.exists ? (snap.data().emails || []) : [];
-        // si pas de doc et on veut ajouter l'initial admin (kenzo...), tu peux créer la doc manuellement via console firebase
-        // show admin button only if in list
-        if(userEmail && admins.includes(userEmail.toLowerCase())){
-          showAdminButton();
-        } else {
-          adminBtnPlaceholder.innerHTML = ''; // remove if present
+        if(!snap.exists) {
+          // si pas de doc, create only if email is the initial kenzo -> handled elsewhere
+          hideAdminButton();
+          return;
         }
+        const admins = snap.data().emails || [];
+        const adminsLower = admins.map(a => (a||'').toLowerCase());
+        if(userEmail && adminsLower.includes(userEmail.toLowerCase())) showAdminButton();
+        else hideAdminButton();
       }catch(err){
         console.warn('Erreur checkAdmins:', err);
-        adminBtnPlaceholder.innerHTML = '';
+        hideAdminButton();
       }
     }
 
-    // observe auth state
+    // attend auth state
     auth.onAuthStateChanged(async (user) => {
       if(user){
-        // récupère pseudo depuis Firestore (si present)
+        // show pseudo/email
         let pseudo = null;
         try{
           const docRef = db.collection('users').doc(user.uid);
           const docSnap = await docRef.get();
-          if(docSnap.exists){ const d = docSnap.data(); if(d && d.pseudo) pseudo = d.pseudo; if(d && d.email) { /* optional */ } }
+          if(docSnap.exists){ const d = docSnap.data(); if(d && d.pseudo) pseudo = d.pseudo; }
         }catch(e){ console.warn('err users read', e); }
 
         const shown = pseudo || user.displayName || (user.email ? user.email.split('@')[0] : 'Utilisateur');
@@ -155,13 +187,17 @@
         loginBtn.style.display = 'none';
         logoutBtn.style.display = 'inline-block';
 
-        // check admin list
-        await checkAdminsAndUpdateUI((user.email||'').toLowerCase());
-      }else{
-        // pas connecté
-        pseudoWrap.style.display = 'none'; emailWrap.style.display = 'none';
-        loginBtn.style.display = 'inline-block'; logoutBtn.style.display = 'none';
-        adminBtnPlaceholder.innerHTML = '';
+        // ensure initial doc if needed & check admin
+        const admins = await ensureInitialAdminsDoc(user.email || '');
+        // if we created the doc above, ensureInitialAdminsDoc returned it; otherwise we fetch proper list below
+        await checkAdminsAndUpdateUI(user.email || '');
+      } else {
+        // not connected
+        pseudoWrap.style.display = 'none';
+        emailWrap.style.display = 'none';
+        loginBtn.style.display = 'inline-block';
+        logoutBtn.style.display = 'none';
+        hideAdminButton();
       }
     });
   </script>
