@@ -2,25 +2,43 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Salhi Shop</title>
   <link rel="stylesheet" href="style.css">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
+      authDomain: "salhishop-1.firebaseapp.com",
+      projectId: "salhishop-1",
+      storageBucket: "salhishop-1.firebasestorage.app",
+      messagingSenderId: "784629559774",
+      appId: "1:784629559774:web:388f9ca4c33e90d6fcad4f",
+      measurementId: "G-34G9453E7H"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+      const photoURL = user.photoURL || "default-avatar.png";
+      document.getElementById("profilePic").src = photoURL;
+      document.getElementById("userName").innerText = user.displayName || user.email;
+    });
+  </script>
 </head>
 <body>
-  <!-- Navbar -->
-  <nav class="navbar">
+  <div class="header">
     <h1>Salhi Shop</h1>
-    <ul>
-      <li><a href="index.html">Accueil</a></li>
-      <li><a href="login.html">Connexion</a></li>
-    </ul>
-  </nav>
-
-  <!-- Contenu -->
-  <section class="hero">
-    <h2>Bienvenue chez Salhi Shop Boncourt</h2>
-    <p>Votre boutique de confiance !</p>
-    <a href="login.html" class="btn">Passer une commande</a>
-  </section>
+    <div class="profile">
+      <img id="profilePic" src="default-avatar.png" alt="Photo de profil">
+      <span id="userName"></span>
+    </div>
+  </div>
 </body>
 </html>
