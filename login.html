@@ -88,26 +88,26 @@ toggleBtn.addEventListener("click", () => {
 });
 </script>
 </head>
-<body style="margin:0;font-family:Arial,sans-serif;background-color:#f4f4f4;">
+<body style="margin:0;font-family:Arial,sans-serif;background:#e0f7fa;">
 
-<header style="display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background-color:#333;color:white;">
+<header style="display:flex;justify-content:space-between;align-items:center;background:#00bcd4;padding:10px 20px;color:white;">
   <h1 style="margin:0;font-size:24px;">Salhi Shop</h1>
-  <button onclick="window.location.href='index.html'" style="background:#555;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;">Retour</button>
+  <button onclick="window.location.href='index.html'" style="background:white;color:#00bcd4;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,0.3);">Retour</button>
 </header>
 
-<main style="display:flex;justify-content:center;align-items:center;height:80vh;">
-  <div style="background:white;padding:30px;border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,0.2);width:300px;text-align:center;">
-    <h2 id="formTitle">Connexion</h2>
+<main style="display:flex;justify-content:center;align-items:center;height:85vh;">
+  <div style="background:white;padding:30px;border-radius:10px;box-shadow:0 5px 15px rgba(0,0,0,0.3);width:320px;text-align:center;">
+    <h2 id="formTitle" style="color:#00bcd4;margin-bottom:20px;">Connexion</h2>
     <form id="loginForm" data-action="login">
-      <div id="pseudoField" style="display:none;margin-bottom:10px;">
-        <input type="text" name="pseudo" placeholder="Pseudo" style="width:100%;padding:8px;margin-bottom:10px;border-radius:4px;border:1px solid #ccc;"/>
+      <div id="pseudoField" style="display:none;margin-bottom:15px;">
+        <input type="text" name="pseudo" placeholder="Pseudo" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;" />
       </div>
-      <input type="email" name="email" placeholder="Email" required style="width:100%;padding:8px;margin-bottom:10px;border-radius:4px;border:1px solid #ccc;"/>
-      <input type="password" name="password" placeholder="Mot de passe" required style="width:100%;padding:8px;margin-bottom:10px;border-radius:4px;border:1px solid #ccc;"/>
-      <div id="errorMsg" style="color:red;margin-bottom:10px;"></div>
-      <button type="submit" id="submitBtn" style="width:100%;padding:10px;background:#28a745;color:white;border:none;border-radius:4px;cursor:pointer;margin-bottom:10px;">Se connecter</button>
-      <button type="button" id="forgotBtn" style="background:none;border:none;color:#007bff;cursor:pointer;margin-bottom:10px;">Mot de passe oublié ?</button><br>
-      <button type="button" id="toggleBtn" style="background:none;border:none;color:#007bff;cursor:pointer;">Créer un compte</button>
+      <input type="email" name="email" placeholder="Email" required style="width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;margin-bottom:15px;" />
+      <input type="password" name="password" placeholder="Mot de passe" required style="width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;margin-bottom:15px;" />
+      <div id="errorMsg" style="color:red;margin-bottom:10px;height:18px;"></div>
+      <button type="submit" id="submitBtn" style="width:100%;padding:10px;background:#00bcd4;color:white;border:none;border-radius:5px;cursor:pointer;margin-bottom:10px;">Se connecter</button>
+      <button type="button" id="forgotBtn" style="background:none;border:none;color:#00bcd4;cursor:pointer;margin-bottom:10px;">Mot de passe oublié ?</button><br>
+      <button type="button" id="toggleBtn" style="background:none;border:none;color:#00bcd4;cursor:pointer;">Créer un compte</button>
     </form>
   </div>
 </main>
