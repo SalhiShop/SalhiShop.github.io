@@ -1,75 +1,123 @@
+/* ======= GLOBAL ======= */
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f0fafa;
+  font-family: 'Arial', sans-serif;
+  background-color: #f0f8ff;
   color: #333;
 }
 
-/* Navbar */
-.navbar {
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  margin: 5px;
+  background-color: #00bcd4;
+  color: white;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: #0097a7;
+}
+
+input {
+  padding: 10px;
+  margin: 5px 0;
+  width: 100%;
+  max-width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* ======= LOGIN ======= */
+h1 {
+  text-align: center;
+  margin-top: 50px;
+  color: #00bcd4;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+input, .buttons button {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ======= HEADER INDEX ======= */
+.header {
+  background-color: #00bcd4;
+  color: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #06b6d4;
   padding: 10px 20px;
-  color: white;
 }
 
-.navbar ul {
-  list-style: none;
+.header h1 {
+  margin: 0;
+}
+
+.profile {
   display: flex;
-  gap: 20px;
+  align-items: center;
 }
 
-.navbar a {
-  color: white;
-  text-decoration: none;
+.profile img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.profile span {
+  margin-right: 10px;
   font-weight: bold;
 }
 
-/* Hero */
-.hero {
+/* ======= MENU ======= */
+.menu {
+  display: flex;
+  justify-content: center;
+  background-color: #e0f7fa;
+  padding: 10px;
+}
+
+.menu button {
+  background-color: transparent;
+  color: #007c91;
+  font-weight: bold;
+}
+
+.menu button:hover {
+  background-color: #b2ebf2;
+}
+
+/* ======= CONTENT ======= */
+.content {
+  max-width: 800px;
+  margin: 20px auto;
   text-align: center;
-  margin-top: 50px;
 }
 
-.hero .btn {
-  display: inline-block;
-  margin-top: 20px;
-  padding: 10px 20px;
-  background: #06b6d4;
-  color: white;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-/* Formulaire */
-.form-container {
-  max-width: 400px;
-  margin: 60px auto;
-  padding: 20px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.form-container input {
-  width: 100%;
-  padding: 10px;
-  margin: 10px 0;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-}
-
-.form-container button {
-  width: 48%;
-  padding: 10px;
-  margin: 10px 1%;
-  border: none;
-  border-radius: 8px;
-  background: #06b6d4;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
+/* ======= RESPONSIVE ======= */
+@media (max-width: 600px) {
+  .header, .menu {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .profile {
+    margin-top: 10px;
+  }
+  input, .buttons button {
+    width: 90%;
+    max-width: none;
+  }
 }
