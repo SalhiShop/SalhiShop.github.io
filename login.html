@@ -8,7 +8,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
     import { 
       getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
-      sendEmailVerification, sendPasswordResetEmail, updateEmail, onAuthStateChanged
+      sendEmailVerification, sendPasswordResetEmail, onAuthStateChanged, signOut
     } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
     const firebaseConfig = {
@@ -24,9 +24,9 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // Langue des emails
     auth.languageCode = 'fr';
 
+    // Créer un compte
     window.signup = () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
@@ -40,6 +40,7 @@
         .catch((e) => alert(e.message));
     };
 
+    // Connexion
     window.login = () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
@@ -63,27 +64,17 @@
         .catch((e) => alert(e.message));
     };
 
-    // Modifier l'adresse email (utilisateur doit être connecté)
-    window.changeEmail = () => {
-      const newEmail = prompt("Entrez votre nouvelle adresse email :");
-      if (!newEmail) return;
-
-      const user = auth.currentUser;
-      if (user) {
-        updateEmail(user, newEmail)
-          .then(() => alert("Adresse email mise à jour !"))
-          .catch((e) => alert(e.message));
-      } else {
-        alert("Vous devez être connecté !");
-      }
+    // Déconnexion
+    window.logout = () => {
+      signOut(auth).then(() => {
+        window.location.reload();
+      });
     };
 
-    // Surveiller l'état de connexion pour A2F / MFA
+    // Surveiller la connexion pour rediriger si déjà connecté
     onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log("Utilisateur connecté :", user.email);
-        // Ici tu peux activer MFA si nécessaire
-        // Firebase Auth propose SMS ou Authenticator App
+      if (user && user.emailVerified) {
+        window.location.href = "index.html";
       }
     });
   </script>
@@ -93,9 +84,10 @@
 
   <input type="email" id="email" placeholder="Email">
   <input type="password" id="password" placeholder="Mot de passe">
-  <button onclick="signup()">Créer un compte</button>
-  <button onclick="login()">Se connecter</button>
-  <button onclick="resetPassword()">Mot de passe oublié ?</button>
-  <button onclick="changeEmail()">Modifier mon email</button>
+  <div class="buttons">
+    <button onclick="signup()">Créer un compte</button>
+    <button onclick="login()">Se connecter</button>
+    <button onclick="resetPassword()">Mot de passe oublié ?</button>
+  </div>
 </body>
 </html>
