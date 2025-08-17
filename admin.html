@@ -1,111 +1,268 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel - Salhi Shop</title>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, deleteDoc, updateDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin - Salhi Shop</title>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
-  authDomain: "salhishop-1.firebaseapp.com",
-  projectId: "salhishop-1",
-  storageBucket: "salhishop-1.appspot.com",
-  messagingSenderId: "784629559774",
-  appId: "1:784629559774:web:388f9ca4c33e90d6fcad4f",
-  measurementId: "G-34G9453E7H"
-};
+  <!-- Firebase compat CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-const usersList = document.getElementById('usersList');
-const search = document.getElementById('search');
-const addAdminBtn = document.getElementById('addAdminBtn');
-
-async function loadUsers() {
-  usersList.innerHTML = '';
-  const snapshot = await getDocs(collection(db, 'users'));
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    const uid = docSnap.id;
-    const div = document.createElement('div');
-    div.style.marginBottom = '10px';
-    div.innerHTML = `
-      <span>${data.pseudo} (${data.email})</span>
-      <button onclick="editPseudo('${uid}')">Modifier pseudo</button>
-      <button onclick="deleteUser('${uid}')">Supprimer</button>
-    `;
-    usersList.appendChild(div);
-  });
-}
-
-async function editPseudo(uid) {
-  const newPseudo = prompt("Nouveau pseudo :");
-  if (!newPseudo) return;
-  await updateDoc(doc(db, 'users', uid), { pseudo: newPseudo });
-  loadUsers();
-}
-
-async function deleteUser(uid) {
-  if (!confirm("Supprimer ce compte ?")) return;
-  await deleteDoc(doc(db, 'users', uid));
-  loadUsers();
-}
-
-addAdminBtn.addEventListener('click', async () => {
-  const email = prompt("Email du nouvel admin :");
-  if (!email) return;
-  const adminDoc = doc(db, 'meta', 'admins');
-  const docSnap = await getDoc(adminDoc);
-  const emails = docSnap.exists() ? docSnap.data().emails : [];
-  emails.push(email);
-  await setDoc(adminDoc, { emails });
-  alert("Admin ajouté !");
-});
-
-search.addEventListener('input', async () => {
-  const value = search.value.toLowerCase();
-  usersList.innerHTML = '';
-  const snapshot = await getDocs(collection(db, 'users'));
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    if (data.pseudo.toLowerCase().includes(value) || data.email.toLowerCase().includes(value)) {
-      const uid = docSnap.id;
-      const div = document.createElement('div');
-      div.style.marginBottom = '10px';
-      div.innerHTML = `
-        <span>${data.pseudo} (${data.email})</span>
-        <button onclick="editPseudo('${uid}')">Modifier pseudo</button>
-        <button onclick="deleteUser('${uid}')">Supprimer</button>
-      `;
-      usersList.appendChild(div);
-    }
-  });
-});
-
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "index.html";
-    return;
-  }
-  const adminDoc = await getDoc(doc(db, "meta", "admins"));
-  if (!adminDoc.exists() || !adminDoc.data().emails.includes(user.email)) {
-    window.location.href = "index.html";
-    return;
-  }
-  loadUsers();
-});
-</script>
+  <!-- Inline styling simple -->
+  <style>
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f0f7fa;color:#03363a}
+    header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#00bcd4;color:white;box-shadow:0 2px 6px rgba(0,0,0,0.12)}
+    header h1{margin:0;font-size:1.3rem}
+    .btn{background:white;color:#00bcd4;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.12)}
+    .container{max-width:1100px;margin:24px auto;padding:0 16px}
+    .panel{background:white;padding:18px;border-radius:10px;box-shadow:0 12px 30px rgba(2,50,50,0.06);margin-bottom:18px}
+    .row{display:flex;gap:12px;align-items:center}
+    input[type=text]{padding:8px;border-radius:8px;border:1px solid #ccc;width:320px}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:8px 10px;border-bottom:1px solid #eee;text-align:left}
+    th{background:#f7fdfd;color:#006064}
+    .small-muted{font-size:0.9rem;color:#567}
+    .admin-badge{background:#00bcd4;color:white;padding:6px 10px;border-radius:999px;font-weight:700;margin-right:8px;display:inline-flex;align-items:center;gap:8px}
+    .danger{background:#f44336;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#e8faf8;color:#006064;font-weight:700;margin-right:8px}
+    .controls{display:flex;gap:8px;align-items:center;margin-top:12px}
+    .pagination{display:flex;gap:8px;align-items:center;margin-top:12px}
+    .page-btn{padding:6px 10px;border-radius:6px;border:1px solid #ddd;background:white;cursor:pointer}
+    .page-btn[disabled]{opacity:0.5;cursor:default}
+    .search-input{width:360px}
+  </style>
 </head>
-<body style="font-family:Arial,sans-serif;padding:20px;">
-<h1>Admin Panel</h1>
-<input type="text" id="search" placeholder="Rechercher un compte..." style="padding:5px;margin-bottom:10px;">
-<button id="addAdminBtn">Ajouter Admin</button>
-<div id="usersList" style="margin-top:20px;"></div>
+<body>
+
+  <header>
+    <h1>Admin - Salhi Shop</h1>
+    <div>
+      <a href="index.html" class="btn" style="margin-right:8px;text-decoration:none">Retour</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Panel: admin management -->
+    <div class="panel">
+      <h3 style="margin:0 0 10px 0">Gestion des admins</h3>
+      <div class="row" style="margin-bottom:12px;">
+        <input id="newAdminEmail" type="text" placeholder="Nouvel admin (email)"/>
+        <button id="addAdminBtn" class="btn">Ajouter admin</button>
+        <div id="adminsList" style="margin-left:auto;"></div>
+      </div>
+      <div id="adminsInfo" class="small-muted">Chargement des admins...</div>
+    </div>
+
+    <!-- Panel: recherche et liste comptes -->
+    <div class="panel">
+      <h3 style="margin:0 0 10px 0">Comptes créés</h3>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <input id="searchInput" class="search-input" type="text" placeholder="Rechercher par pseudo, email ou uid"/>
+        <div class="small-muted">Résultats: <span id="count">0</span></div>
+      </div>
+
+      <table id="usersTable" aria-live="polite">
+        <thead>
+          <tr><th>Pseudo</th><th>Email</th><th>UID</th></tr>
+        </thead>
+        <tbody id="usersTbody">
+          <tr><td colspan="3">Chargement…</td></tr>
+        </tbody>
+      </table>
+
+      <!-- pagination -->
+      <div class="pagination" style="justify-content:flex-end;">
+        <button id="prevPage" class="page-btn">Préc.</button>
+        <div id="pageInfo" class="small-muted">Page <span id="currentPage">1</span></div>
+        <button id="nextPage" class="page-btn">Suiv.</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Firebase config (compat)
+    const firebaseConfig = {
+      apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
+      authDomain: "salhishop-1.firebaseapp.com",
+      projectId: "salhishop-1",
+      storageBucket: "salhishop-1.firebasestorage.app",
+      messagingSenderId: "784629559774",
+      appId: "1:784629559774:web:388f9ca4c33e90d6fcad4f",
+      measurementId: "G-34G9453E7H"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // DOM
+    const adminsInfo = document.getElementById('adminsInfo');
+    const adminsListDiv = document.getElementById('adminsList');
+    const newAdminEmail = document.getElementById('newAdminEmail');
+    const addAdminBtn = document.getElementById('addAdminBtn');
+    const usersTbody = document.getElementById('usersTbody');
+    const searchInput = document.getElementById('searchInput');
+    const countSpan = document.getElementById('count');
+
+    const prevPageBtn = document.getElementById('prevPage');
+    const nextPageBtn = document.getElementById('nextPage');
+    const currentPageSpan = document.getElementById('currentPage');
+
+    // paging state
+    let currentRows = [];
+    let filteredRows = [];
+    let currentPage = 1;
+    const pageSize = 10;
+
+    // require admin or redirect
+    async function requireAdminOrRedirect(user){
+      try{
+        const docRef = db.collection('meta').doc('admins');
+        const snap = await docRef.get();
+        const admins = snap.exists ? (snap.data().emails || []) : [];
+        const email = (user && user.email) ? user.email.toLowerCase() : '';
+        if(!email || !admins.map(a=>a.toLowerCase()).includes(email)){
+          window.location.href = 'index.html';
+          return false;
+        }
+        return true;
+      }catch(e){
+        console.error('Erreur requireAdmin', e);
+        window.location.href = 'index.html';
+        return false;
+      }
+    }
+
+    // onAuthStateChanged -> require admin then init listeners
+    auth.onAuthStateChanged(async (user) => {
+      if(!user){ window.location.href = 'index.html'; return; }
+      const ok = await requireAdminOrRedirect(user);
+      if(ok) initRealtime();
+    });
+
+    // init realtime listeners for admins and users (onSnapshot)
+    function initRealtime(){
+      // admins doc listener
+      db.collection('meta').doc('admins').onSnapshot(snap => {
+        const admins = snap.exists ? (snap.data().emails || []) : [];
+        renderAdmins(admins);
+      }, err => {
+        console.warn('admins onSnapshot err', err);
+        adminsInfo.textContent = 'Erreur lecture admins';
+      });
+
+      // users collection listener (realtime)
+      db.collection('users').onSnapshot(snapshot => {
+        const rows = [];
+        snapshot.forEach(doc => {
+          const d = doc.data() || {};
+          rows.push({
+            uid: doc.id,
+            pseudo: d.pseudo || '(vide)',
+            email: d.email || (d.mail || '(non enregistré)'),
+            createdAt: d.createdAt || null
+          });
+        });
+        currentRows = rows;
+        applyFilterAndRender();
+      }, err => {
+        console.error('users onSnapshot err', err);
+        usersTbody.innerHTML = '<tr><td colspan="3">Erreur chargement</td></tr>';
+      });
+    }
+
+    // render admins with delete button
+    function renderAdmins(admins){
+      adminsInfo.textContent = 'Admins actuels : ' + (admins.length ? admins.join(', ') : '(aucun)');
+      adminsListDiv.innerHTML = '';
+      admins.forEach(a => {
+        const span = document.createElement('span');
+        span.className = 'admin-badge';
+        // badge text and delete btn
+        span.innerHTML = `<span style="font-weight:700">${escapeHtml(a)}</span>
+          <button title="Supprimer admin" style="background:transparent;border:none;color:white;cursor:pointer;font-weight:700;margin-left:6px;">✖</button>`;
+        // attach delete
+        const delBtn = span.querySelector('button');
+        delBtn.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          if(!confirm('Supprimer cet admin ? ' + a)) return;
+          try{
+            await db.collection('meta').doc('admins').set({ emails: firebase.firestore.FieldValue.arrayRemove(a.toLowerCase()) }, { merge:true });
+            // no need reload, onSnapshot apply
+            alert('Admin supprimé : ' + a);
+          }catch(e){ console.error('err rm admin', e); alert('Erreur suppression : ' + e.message); }
+        });
+        adminsListDiv.appendChild(span);
+      });
+    }
+
+    // add admin
+    addAdminBtn.addEventListener('click', async () => {
+      const email = (newAdminEmail.value || '').trim().toLowerCase();
+      if(!email || !email.includes('@')) { alert('Email invalide'); return; }
+      try{
+        await db.collection('meta').doc('admins').set({ emails: firebase.firestore.FieldValue.arrayUnion(email) }, { merge:true });
+        newAdminEmail.value = '';
+        alert('Admin ajouté : ' + email);
+      }catch(e){
+        console.error(e);
+        alert('Erreur ajout admin : ' + e.message);
+      }
+    });
+
+    // filtering + pagination
+    function applyFilterAndRender(){
+      const q = (searchInput.value || '').trim().toLowerCase();
+      filteredRows = currentRows.filter(r => {
+        return (r.pseudo||'').toLowerCase().includes(q) ||
+               (r.email||'').toLowerCase().includes(q) ||
+               (r.uid||'').toLowerCase().includes(q);
+      });
+      // reset page if out of range
+      currentPage = 1;
+      renderPage();
+    }
+
+    function renderPage(){
+      const total = filteredRows.length;
+      countSpan.textContent = total;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if(currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * pageSize;
+      const pageRows = filteredRows.slice(start, start + pageSize);
+
+      usersTbody.innerHTML = '';
+      if(pageRows.length === 0){
+        usersTbody.innerHTML = '<tr><td colspan="3">Aucun compte trouvé</td></tr>';
+      } else {
+        pageRows.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${escapeHtml(r.pseudo)}</td><td>${escapeHtml(r.email)}</td><td style="font-family:monospace">${escapeHtml(r.uid)}</td>`;
+          usersTbody.appendChild(tr);
+        });
+      }
+
+      currentPageSpan.textContent = currentPage;
+      prevPageBtn.disabled = (currentPage <= 1);
+      nextPageBtn.disabled = (currentPage >= totalPages);
+    }
+
+    prevPageBtn.addEventListener('click', () => {
+      if(currentPage > 1) { currentPage--; renderPage(); }
+    });
+    nextPageBtn.addEventListener('click', () => {
+      const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+      if(currentPage < totalPages) { currentPage++; renderPage(); }
+    });
+
+    searchInput.addEventListener('input', () => applyFilterAndRender());
+
+    // tiny escape helper
+    function escapeHtml(s){ return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    // initial placeholder
+    usersTbody.innerHTML = '<tr><td colspan="3">En attente d\'authentification & chargement…</td></tr>';
+  </script>
 </body>
 </html>
