@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Info - Salhi Shop</title>
+</head>
+<body style="margin:0;font-family:Arial,Helvetica,sans-serif;background:#f0f7fa;color:#03363a;">
+
+  <!-- Header (même style que index) -->
+  <header style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#00bcd4;color:white;box-shadow:0 2px 6px rgba(0,0,0,0.12);">
+    <h1 style="margin:0;font-size:1.4rem;">Salhi Shop</h1>
+
+    <!-- zone user minimal (reste identique visuel) -->
+    <div style="display:flex;align-items:center;gap:10px;">
+      <a href="index.html" style="background:white;color:#00bcd4;padding:8px 12px;border-radius:6px;text-decoration:none;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.12);">Accueil</a>
+      <a href="info.html" style="background:rgba(255,255,255,0.12);color:white;padding:8px 12px;border-radius:6px;text-decoration:none;font-weight:700;">Info</a>
+    </div>
+  </header>
+
+  <!-- Barre secondaire (comme index) -->
+  <nav style="display:flex;justify-content:center;gap:28px;padding:10px 0;background:#00acc1;font-weight:700;color:white;">
+    <a href="index.html" style="color:white;text-decoration:none;padding:6px 12px;border-radius:8px;">Accueil</a>
+    <a href="index.html#commandes" style="color:white;text-decoration:none;padding:6px 12px;border-radius:8px;">Commande</a>
+    <a href="info.html" style="color:white;text-decoration:none;padding:6px 12px;border-radius:8px;">Info</a>
+  </nav>
+
+  <!-- Contenu principal -->
+  <main style="display:flex;justify-content:center;align-items:flex-start;padding:30px 20px;">
+    <div style="width:100%;max-width:1000px;">
+
+      <!-- Carte + adresse -->
+      <section style="display:flex;flex-wrap:wrap;gap:20px;">
+        <div style="flex:1;min-width:300px;">
+          <div style="background:white;padding:20px;border-radius:12px;box-shadow:0 10px 25px rgba(2,50,50,0.06);">
+            <h2 style="color:#00bcd4;margin:0 0 6px 0;">Où nous trouver</h2>
+            <p style="margin:6px 0 14px 0;color:#275a5b;">
+              <strong>Salhi Shop</strong><br>
+              Route du Jura 26<br>
+              2926 Boncourt
+            </p>
+
+            <p style="margin:6px 0;color:#275a5b;">
+              <strong>Téléphone :</strong> <a href="tel:+41324755313" style="color:#00bcd4;text-decoration:none;">032 475 53 13</a>
+            </p>
+
+            <p style="margin:10px 0;color:#275a5b;">
+              <strong>Propriétaire :</strong> Sofiane Salhi<br>
+              <strong>Âge de l'entreprise :</strong> <span id="companyAge">—</span>
+            </p>
+
+            <p style="margin:6px 0;color:#275a5b;">
+              <strong>Services :</strong><br>
+              Vente en magasin, petites livraisons locales, paiement par carte et espèces.
+            </p>
+
+            <p style="margin:6px 0;color:#275a5b;">
+              <strong>Horaires (indicatif) :</strong><br>
+              Lun–Ven : 09:00–18:30<br>
+              Sam : 09:00–17:00<br>
+              Dim : fermé
+            </p>
+          </div>
+        </div>
+
+        <!-- carte intégrée -->
+        <div style="flex:1;min-width:300px;">
+          <div style="background:white;border-radius:12px;overflow:hidden;box-shadow:0 10px 25px rgba(2,50,50,0.06);">
+            <!-- Embed Google Maps via query (fonctionne sans API key pour simple affichage) -->
+            <iframe
+              width="100%"
+              height="330"
+              frameborder="0"
+              style="border:0;"
+              src="https://www.google.com/maps?q=Route+du+Jura+26,+2926+Boncourt&output=embed"
+              allowfullscreen=""
+              loading="lazy"></iframe>
+            <div style="padding:12px;">
+              <small style="color:#567;">Itinéraire rapide : cliquez sur la carte pour ouvrir Google Maps.</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Histoire / infos supplémentaires -->
+      <section style="margin-top:24px;">
+        <div style="background:white;padding:20px;border-radius:12px;box-shadow:0 10px 25px rgba(2,50,50,0.06);">
+          <h3 style="color:#00bcd4;margin-top:0;">À propos</h3>
+
+          <p style="color:#275a5b;">
+            Salhi Shop est une petite entreprise locale, fondée par <strong>Sofiane Salhi</strong>. 
+            Notre objectif est d'offrir des produits de qualité à la communauté de Boncourt et des environs.
+          </p>
+
+          <h4 style="margin-bottom:6px;color:#00bcd4;">Informations pratiques (expliquées)</h4>
+          <ul style="color:#275a5b;line-height:1.6;">
+            <li><strong>Adresse :</strong> Route du Jura 26, 2926 Boncourt — nous sommes sur la rue principale, facilement accessible depuis la route cantonale.</li>
+            <li><strong>Téléphone :</strong> 032 475 53 13 — utile pour les commandes ou vérifier la disponibilité d’un article.</li>
+            <li><strong>Propriétaire :</strong> Sofiane Salhi — contact direct pour partenariats et questions.</li>
+            <li><strong>Paiement :</strong> carte bancaire, Twint (si disponible en magasin), espèces.</li>
+            <li><strong>Livraison :</strong> possibilité de livraison locale — nous contacter pour les détails.</li>
+          </ul>
+
+          <h4 style="margin-bottom:6px;color:#00bcd4;">Autres détails</h4>
+          <p style="color:#275a5b;">
+            - Si tu veux qu’on ajoute les réseaux sociaux, un formulaire de contact ou une galerie de photos, je peux le faire.<br>
+            - Si l’adresse exacte change ou si tu veux ajuster les horaires, indique-les et je modifie la page.
+          </p>
+        </div>
+      </section>
+
+      <!-- bouton retour -->
+      <div style="margin-top:18px;text-align:center;">
+        <a href="index.html" style="display:inline-block;background:#00bcd4;color:white;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,0.06);">Retour à l'accueil</a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Script pour calculer l'âge de l'entreprise (ex: fondée le 17 août 2024 → 1 an) -->
+  <script>
+    (function computeCompanyAge() {
+      // Définit la date de création — modifie si différent
+      const createdDate = new Date('2024-08-17T00:00:00'); // YYYY-MM-DD
+      const now = new Date();
+
+      // calcul années et mois
+      let years = now.getFullYear() - createdDate.getFullYear();
+      let months = now.getMonth() - createdDate.getMonth();
+
+      if (months < 0) { years -= 1; months += 12; }
+
+      // Affichage lisible
+      const el = document.getElementById('companyAge');
+      if (!el) return;
+
+      if (years <= 0) {
+        // si < 1 an -> afficher mois
+        if (months <= 1) el.textContent = months + ' mois';
+        else el.textContent = months + ' mois';
+      } else {
+        el.textContent = years + (years > 1 ? ' ans' : ' an') + (months ? ' et ' + months + ' mois' : '');
+      }
+    })();
+  </script>
+
+</body>
+</html>
