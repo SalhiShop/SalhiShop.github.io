@@ -8,6 +8,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
@@ -21,12 +22,22 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
 
     async function register() {
       const email = document.getElementById("regEmail").value;
       const password = document.getElementById("regPassword").value;
+      const pseudo = document.getElementById("regPseudo").value;
+
+      if (!pseudo) {
+        alert("Veuillez entrer un pseudo.");
+        return;
+      }
+
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        // Enregistrer le pseudo dans Firestore
+        await setDoc(doc(db, "users", userCredential.user.uid), { pseudo });
         await sendEmailVerification(userCredential.user);
         alert("Compte créé ! Vérifiez votre email pour activer le compte.");
       } catch (error) {
@@ -76,6 +87,7 @@
 
     <section>
       <h2>Créer un compte</h2>
+      <input type="text" id="regPseudo" placeholder="Pseudo">
       <input type="email" id="regEmail" placeholder="Email">
       <input type="password" id="regPassword" placeholder="Mot de passe">
       <button onclick="register()">S’inscrire</button>
