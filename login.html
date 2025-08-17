@@ -2,36 +2,13 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Connexion - Salhi Shop</title>
+  <title>Login - Salhi Shop</title>
   <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <!-- Navbar -->
-  <nav class="navbar">
-    <h1>Salhi Shop</h1>
-    <ul>
-      <li><a href="index.html">Accueil</a></li>
-    </ul>
-  </nav>
-
-  <!-- Formulaire -->
-  <section class="form-container">
-    <h2>Connexion / Inscription</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Mot de passe">
-    <button id="signup">Créer un compte</button>
-    <button id="login">Se connecter</button>
-    <p id="message"></p>
-  </section>
-
-  <!-- 🔥 Script Firebase -->
   <script type="module">
+    // Import Firebase directement ici
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } 
-      from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
-    // Config Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
       authDomain: "salhishop-1.firebaseapp.com",
@@ -42,70 +19,47 @@
       measurementId: "G-34G9453E7H"
     };
 
-    // Init Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // Récupération des éléments HTML
-    const email = document.getElementById("email");
-    const password = document.getElementById("password");
-    const signupBtn = document.getElementById("signup");
-    const loginBtn = document.getElementById("login");
-    const message = document.getElementById("message");
+    // Mettre les emails en français
+    auth.languageCode = 'fr';
 
-    // Fonction pour traduire les erreurs Firebase
-    function afficherErreur(code) {
-      switch(code) {
-        case "auth/invalid-email":
-          return "L'adresse email n'est pas valide.";
-        case "auth/missing-password":
-        case "auth/weak-password":
-          return "Le mot de passe doit contenir au moins 6 caractères.";
-        case "auth/email-already-in-use":
-          return "Un compte existe déjà avec cet email.";
-        case "auth/user-not-found":
-          return "Aucun utilisateur trouvé avec cet email.";
-        case "auth/wrong-password":
-          return "Mot de passe incorrect.";
-        default:
-          return "Une erreur est survenue, merci de réessayer.";
-      }
-    }
+    window.signup = () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
-    // Inscription avec vérification email
-    signupBtn.addEventListener("click", () => {
-      createUserWithEmailAndPassword(auth, email.value, password.value)
+      createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-          const user = userCredential.user;
-          sendEmailVerification(user).then(() => {
-            message.textContent = "✅ Compte créé. Vérifiez votre boîte mail pour confirmer votre adresse.";
-            message.style.color = "green";
-          });
+          sendEmailVerification(userCredential.user)
+            .then(() => alert("Email de vérification envoyé en français !"))
+            .catch((e) => alert(e.message));
         })
-        .catch((error) => {
-          message.textContent = "❌ " + afficherErreur(error.code);
-          message.style.color = "red";
-        });
-    });
+        .catch((e) => alert(e.message));
+    };
 
-    // Connexion (seulement si email vérifié)
-    loginBtn.addEventListener("click", () => {
-      signInWithEmailAndPassword(auth, email.value, password.value)
+    window.login = () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-          const user = userCredential.user;
-          if (user.emailVerified) {
-            message.textContent = "✅ Connecté ! Bienvenue " + user.email;
-            message.style.color = "green";
-          } else {
-            message.textContent = "⚠️ Merci de vérifier votre adresse email avant de vous connecter.";
-            message.style.color = "orange";
+          if (!userCredential.user.emailVerified) {
+            alert("Veuillez vérifier votre email avant de vous connecter !");
+            return;
           }
+          window.location.href = "index.html";
         })
-        .catch((error) => {
-          message.textContent = "❌ " + afficherErreur(error.code);
-          message.style.color = "red";
-        });
-    });
+        .catch((e) => alert(e.message));
+    };
   </script>
+</head>
+<body>
+  <h1>Salhi Shop - Connexion</h1>
+
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Mot de passe">
+  <button onclick="signup()">Créer un compte</button>
+  <button onclick="login()">Se connecter</button>
 </body>
 </html>
