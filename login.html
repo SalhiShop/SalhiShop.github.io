@@ -6,8 +6,20 @@
 <title>Connexion - Salhi Shop</title>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  updateProfile
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
@@ -36,12 +48,42 @@ form.addEventListener("submit", async (e) => {
 
   try {
     if (form.dataset.action === "signup") {
+      // création du compte
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await sendEmailVerification(userCredential.user);
-      await setDoc(doc(db, "users", userCredential.user.uid), { pseudo: pseudo });
-      alert("Compte créé ! Vérifiez votre email.");
+      const user = userCredential.user;
+
+      // met à jour le displayName (utile pour firebase.currentUser.displayName)
+      if (pseudo) {
+        try {
+          await updateProfile(user, { displayName: pseudo });
+        } catch (updErr) {
+          console.warn('Impossible de mettre à jour le displayName:', updErr);
+        }
+      }
+
+      // Enregistre le document users/{uid} avec pseudo + email + createdAt
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          pseudo: pseudo || null,
+          email: email || null,
+          createdAt: serverTimestamp()
+        }, { merge: true });
+      } catch (dbErr) {
+        console.warn('Erreur enregistrement users doc:', dbErr);
+      }
+
+      // envoi verification et feedback
+      try {
+        await sendEmailVerification(user);
+      } catch (verifErr) {
+        console.warn('Erreur envoi email vérification:', verifErr);
+      }
+
+      alert("Compte créé ! Vérifiez votre email (message envoyé).");
+      // redirection vers index (ou vers login si tu préfères)
       window.location.href = "index.html";
     } else {
+      // connexion
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       if (!userCredential.user.emailVerified) {
         alert("Veuillez vérifier votre email avant de vous connecter.");
@@ -50,12 +92,13 @@ form.addEventListener("submit", async (e) => {
       window.location.href = "index.html";
     }
   } catch (err) {
+    // messages d'erreur conviviaux
     if (err.code === "auth/email-already-in-use") errorMsg.innerText = "Cet email est déjà utilisé.";
     else if (err.code === "auth/invalid-email") errorMsg.innerText = "Email invalide.";
     else if (err.code === "auth/weak-password") errorMsg.innerText = "Mot de passe trop faible (≥6 caractères).";
     else if (err.code === "auth/wrong-password") errorMsg.innerText = "Mot de passe incorrect.";
     else if (err.code === "auth/user-not-found") errorMsg.innerText = "Utilisateur introuvable.";
-    else errorMsg.innerText = err.message;
+    else errorMsg.innerText = err.message || "Erreur inconnue.";
   }
 });
 
