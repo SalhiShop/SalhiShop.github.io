@@ -4,70 +4,77 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Salhi Shop</title>
+
   <!-- Firebase compat CDN -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <!-- inline style (garde ton look cyan) -->
+  <style>
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f0f7fa;color:#03363a}
+    header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#00bcd4;color:white;box-shadow:0 2px 6px rgba(0,0,0,0.12)}
+    header h1{margin:0;font-size:1.4rem}
+    #userArea{display:flex;align-items:center;gap:14px}
+    #userInfo{display:flex;flex-direction:column;align-items:flex-end;line-height:1}
+    .btn{background:white;color:#00bcd4;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.12)}
+    .btn:hover{transform:translateY(-1px)}
+    .secondary{display:flex;align-items:center;gap:18px;padding:10px 12px;background:#00acc1;color:white;font-weight:700}
+    .secondary a{color:white;text-decoration:none;padding:6px 12px;border-radius:8px}
+    .secondary a:hover{background:rgba(255,255,255,0.08)}
+    main{display:flex;justify-content:center;align-items:center;min-height:calc(100vh - 140px);padding:20px;text-align:center}
+    .card{background:white;padding:28px;border-radius:12px;box-shadow:0 12px 30px rgba(2,50,50,0.06);max-width:780px;width:100%}
+    .title{color:#00bcd4;margin:0 0 8px 0;font-size:1.8rem}
+    .action{background:#00bcd4;color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700}
+    .action:hover{background:#0097a7}
+  </style>
 </head>
-<body style="margin:0;font-family:Arial,Helvetica,sans-serif;background:#f0f7fa;color:#03363a;">
+<body>
 
-  <!-- Header principal -->
-  <header style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#00bcd4;color:white;box-shadow:0 2px 6px rgba(0,0,0,0.12);">
-    <h1 style="margin:0;font-size:1.4rem;">Salhi Shop</h1>
+  <header>
+    <h1>Salhi Shop</h1>
 
-    <!-- user area: info (pseudo/email stacked) placed side-by-side with buttons -->
-    <div id="userArea" style="display:flex;align-items:center;gap:14px;">
-      <!-- user info column (pseudo above email) -->
-      <div id="userInfo" style="display:flex;flex-direction:column;align-items:flex-end;line-height:1;">
-        <div id="pseudoWrap" style="display:none;font-weight:700;background:rgba(255,255,255,0.08);padding:6px 12px;border-radius:999px;font-size:0.95rem;color:white;"></div>
-        <div id="emailWrap" style="display:none;font-size:0.80rem;color:rgba(255,255,255,0.95);margin-top:4px;"></div>
+    <div id="userArea">
+      <div id="userInfo">
+        <div id="pseudoWrap" style="display:none;font-weight:700;background:rgba(255,255,255,0.08);padding:6px 12px;border-radius:999px;font-size:0.95rem;color:white"></div>
+        <div id="emailWrap" style="display:none;font-size:0.80rem;color:rgba(255,255,255,0.95);margin-top:4px"></div>
       </div>
 
-      <!-- boutons (même style pour connexion et déconnexion) -->
       <div style="display:flex;gap:8px;align-items:center;">
-        <button id="loginBtn"
-                style="background:white;color:#00bcd4;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.12);"
-                onclick="window.location.href='login.html'">
-          Se connecter
-        </button>
-
-        <button id="logoutBtn"
-                style="display:none;background:white;color:#00bcd4;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.12);">
-          Se déconnecter
-        </button>
+        <button id="loginBtn" class="btn" onclick="window.location.href='login.html'">Se connecter</button>
+        <button id="logoutBtn" class="btn" style="display:none">Se déconnecter</button>
       </div>
     </div>
   </header>
 
-  <!-- Barre secondaire -->
-  <nav style="display:flex;justify-content:center;gap:28px;padding:10px 0;background:#00acc1;font-weight:700;color:white;">
-    <a href="index.html" style="color:white;text-decoration:none;padding:6px 12px;border-radius:8px;">Accueil</a>
-    <a href="#commandes" style="color:white;text-decoration:none;padding:6px 12px;border-radius:8px;">Commande</a>
-    <a href="info.html" style="color:white;text-decoration:none;padding:6px 12px;border-radius:8px;">Info</a>
-  </nav>
+  <!-- Barre secondaire : bouton Admin (sera affiché si admin) + Accueil/Commande/Info -->
+  <div class="secondary" id="secondaryNav">
+    <!-- admin button inséré dynamiquement dans JS si besoin (placeholder left) -->
+    <span id="adminBtnPlaceholder" style="display:inline-block;"></span>
 
-  <!-- Contenu principal -->
-  <main style="display:flex;justify-content:center;align-items:center;min-height:calc(100vh - 140px);padding:20px;text-align:center;">
-    <div style="background:white;padding:28px;border-radius:12px;box-shadow:0 12px 30px rgba(2,50,50,0.06);max-width:780px;width:100%;">
-      <h2 style="color:#00bcd4;margin:0 0 8px 0;font-size:1.8rem;">Bienvenue sur Salhi Shop !</h2>
-      <p style="margin:0 0 16px 0;color:#275a5b;">Découvrez nos produits et promotions.</p>
+    <a href="index.html">Accueil</a>
+    <a href="#commandes">Commande</a>
+    <a href="info.html">Info</a>
+  </div>
 
-      <section id="commandes" style="margin-top:12px;">
-        <h3 style="margin:0 0 8px 0;">Passer une commande</h3>
-        <button id="orderBtn" style="background:#00bcd4;color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:700;">
-          Commander
-        </button>
+  <main>
+    <div class="card">
+      <h2 class="title">Bienvenue sur Salhi Shop !</h2>
+      <p style="margin:0 0 16px 0;color:#275a5b">Découvrez nos produits et promotions.</p>
+
+      <section id="commandes">
+        <h3 style="margin:0 0 8px 0">Passer une commande</h3>
+        <button class="action" id="orderBtn">Commander</button>
       </section>
 
-      <section id="info" style="margin-top:18px;color:#567;font-size:0.95rem;">
+      <section id="info" style="margin-top:18px;color:#567;font-size:0.95rem">
         <p>Infos : adresse du magasin, horaires, contact…</p>
       </section>
     </div>
   </main>
 
-  <!-- Script Firebase + UI logic (compat) -->
   <script>
-    // config Firebase
+    // config Firebase (compat)
     const firebaseConfig = {
       apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
       authDomain: "salhishop-1.firebaseapp.com",
@@ -77,74 +84,84 @@
       appId: "1:784629559774:web:388f9ca4c33e90d6fcad4f",
       measurementId: "G-34G9453E7H"
     };
-
-    // init compat
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // DOM elements
+    // éléments DOM
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const pseudoWrap = document.getElementById('pseudoWrap');
     const emailWrap = document.getElementById('emailWrap');
+    const adminBtnPlaceholder = document.getElementById('adminBtnPlaceholder');
     const orderBtn = document.getElementById('orderBtn');
 
-    // expose logout globally and wire button
-    window.logout = async function () {
-      try {
+    // logout
+    window.logout = async function(){
+      try{
         await auth.signOut();
         alert('Déconnecté avec succès !');
-      } catch (err) {
-        alert('Erreur lors de la déconnexion : ' + err.message);
-      }
+      }catch(e){ alert('Erreur : '+e.message) }
     };
     logoutBtn.addEventListener('click', window.logout);
 
     // commande
-    window.passerCommande = function () {
+    window.passerCommande = function(){
       const user = auth.currentUser;
-      if (!user || !user.emailVerified) {
-        alert('Vous devez être connecté et avoir vérifié votre email pour passer une commande.');
-        return;
-      }
-      alert('Commande en cours (à implémenter).');
+      if(!user || !user.emailVerified){ alert('Vous devez être connecté et avoir vérifié votre email pour passer une commande.'); return; }
+      alert('Commande (fonctionnalité à implémenter).');
     };
     orderBtn.addEventListener('click', () => window.passerCommande());
 
-    // Surveille l'état de connexion et met à jour l'UI
+    // Utilitaire : affiche bouton Admin (on le crée dynamiquement)
+    function showAdminButton(){
+      adminBtnPlaceholder.innerHTML = '<a href="admin.html" style=\"background:white;color:#00bcd4;padding:6px 10px;border-radius:6px;text-decoration:none;font-weight:700;\">Admin</a>';
+    }
+
+    // vérifie si user est admin via doc meta/admins (champ emails array)
+    async function checkAdminsAndUpdateUI(userEmail){
+      try{
+        const docRef = db.collection('meta').doc('admins');
+        const snap = await docRef.get();
+        const admins = snap.exists ? (snap.data().emails || []) : [];
+        // si pas de doc et on veut ajouter l'initial admin (kenzo...), tu peux créer la doc manuellement via console firebase
+        // show admin button only if in list
+        if(userEmail && admins.includes(userEmail.toLowerCase())){
+          showAdminButton();
+        } else {
+          adminBtnPlaceholder.innerHTML = ''; // remove if present
+        }
+      }catch(err){
+        console.warn('Erreur checkAdmins:', err);
+        adminBtnPlaceholder.innerHTML = '';
+      }
+    }
+
+    // observe auth state
     auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        // récupère pseudo depuis Firestore si existant
+      if(user){
+        // récupère pseudo depuis Firestore (si present)
         let pseudo = null;
-        try {
+        try{
           const docRef = db.collection('users').doc(user.uid);
           const docSnap = await docRef.get();
-          if (docSnap.exists) {
-            const data = docSnap.data();
-            if (data && data.pseudo) pseudo = data.pseudo;
-          }
-        } catch (err) {
-          console.warn('Erreur récupération pseudo Firestore :', err);
-        }
+          if(docSnap.exists){ const d = docSnap.data(); if(d && d.pseudo) pseudo = d.pseudo; if(d && d.email) { /* optional */ } }
+        }catch(e){ console.warn('err users read', e); }
 
-        const shownName = pseudo || user.displayName || (user.email ? user.email.split('@')[0] : 'Utilisateur');
+        const shown = pseudo || user.displayName || (user.email ? user.email.split('@')[0] : 'Utilisateur');
+        pseudoWrap.textContent = shown; pseudoWrap.style.display = 'block';
+        emailWrap.textContent = user.email || ''; emailWrap.style.display = user.email ? 'block' : 'none';
 
-        // Affiche pseudo et email (email en dessous du pseudo)
-        pseudoWrap.textContent = shownName;
-        pseudoWrap.style.display = 'block';
-        emailWrap.textContent = user.email || '';
-        emailWrap.style.display = user.email ? 'block' : 'none';
-
-        // Affiche/masque boutons
         loginBtn.style.display = 'none';
         logoutBtn.style.display = 'inline-block';
-      } else {
-        // Pas connecté
-        pseudoWrap.style.display = 'none';
-        emailWrap.style.display = 'none';
-        loginBtn.style.display = 'inline-block';
-        logoutBtn.style.display = 'none';
+
+        // check admin list
+        await checkAdminsAndUpdateUI((user.email||'').toLowerCase());
+      }else{
+        // pas connecté
+        pseudoWrap.style.display = 'none'; emailWrap.style.display = 'none';
+        loginBtn.style.display = 'inline-block'; logoutBtn.style.display = 'none';
+        adminBtnPlaceholder.innerHTML = '';
       }
     });
   </script>
