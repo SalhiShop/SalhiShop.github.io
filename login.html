@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion - Salhi Shop</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <h1>Salhi Shop</h1>
+    <ul>
+      <li><a href="index.html">Accueil</a></li>
+    </ul>
+  </nav>
+
+  <!-- Formulaire -->
+  <section class="form-container">
+    <h2>Connexion / Inscription</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Mot de passe">
+    <button id="signup">Créer un compte</button>
+    <button id="login">Se connecter</button>
+    <p id="message"></p>
+  </section>
+
+  <!-- 🔥 Script Firebase intégré -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } 
+      from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+
+    // Config Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
+      authDomain: "salhishop-1.firebaseapp.com",
+      projectId: "salhishop-1",
+      storageBucket: "salhishop-1.firebasestorage.app",
+      messagingSenderId: "784629559774",
+      appId: "1:784629559774:web:388f9ca4c33e90d6fcad4f",
+      measurementId: "G-34G9453E7H"
+    };
+
+    // Initialisation Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Récupération des éléments HTML
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+    const signupBtn = document.getElementById("signup");
+    const loginBtn = document.getElementById("login");
+    const message = document.getElementById("message");
+
+    // Créer un compte
+    signupBtn.addEventListener("click", () => {
+      createUserWithEmailAndPassword(auth, email.value, password.value)
+        .then((userCredential) => {
+          message.textContent = "✅ Compte créé avec succès !";
+          message.style.color = "green";
+        })
+        .catch((error) => {
+          message.textContent = "❌ " + error.message;
+          message.style.color = "red";
+        });
+    });
+
+    // Connexion
+    loginBtn.addEventListener("click", () => {
+      signInWithEmailAndPassword(auth, email.value, password.value)
+        .then((userCredential) => {
+          message.textContent = "✅ Connecté ! Bienvenue " + userCredential.user.email;
+          message.style.color = "green";
+        })
+        .catch((error) => {
+          message.textContent = "❌ " + error.message;
+          message.style.color = "red";
+        });
+    });
+  </script>
+</body>
+</html>
