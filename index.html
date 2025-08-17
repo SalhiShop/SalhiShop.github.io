@@ -1,123 +1,169 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Salhi Shop</title>
+
+  <!-- Styles intégrés (cyan / moderne) -->
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background-color: #f0f4f8;
-      color: #333;
+      background-color: #f0f7fa;
+      color: #03363a;
     }
+
+    /* Header principal */
     .header {
       background-color: #00bcd4;
       color: white;
-      padding: 15px 20px;
+      padding: 14px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
     }
-    .header button {
-      background-color: white;
+    .header h1 { margin: 0; font-size: 1.4rem; }
+
+    .user-block {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: white;
+    }
+    .user-block .pseudo {
+      font-weight: 700;
+      background: rgba(255,255,255,0.08);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.95rem;
+    }
+
+    .btn-plain {
+      background: white;
       color: #00bcd4;
       border: none;
       padding: 8px 12px;
+      border-radius: 6px;
       cursor: pointer;
-      border-radius: 5px;
-      margin-left: 10px;
-      font-weight: bold;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
     }
-    .header button:hover {
-      background-color: #e0f7fa;
-    }
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .user-info small {
-      display: block;
-      font-size: 0.8em;
-      color: #e0f7fa;
-    }
-    .nav-bar {
-      background-color: #00acc1;
+    .btn-plain:hover { transform: translateY(-1px); }
+
+    /* Barre secondaire */
+    .secondary-nav {
+      background: #00acc1;
       display: flex;
       justify-content: center;
-      gap: 30px;
+      gap: 28px;
       padding: 10px 0;
-      font-weight: bold;
       color: white;
+      font-weight: 700;
     }
-    .nav-bar a {
+    .secondary-nav a {
+      color: white;
       text-decoration: none;
-      color: white;
-      padding: 5px 10px;
-      border-radius: 5px;
+      padding: 6px 12px;
+      border-radius: 8px;
     }
-    .nav-bar a:hover {
-      background-color: #008b99;
-    }
-    .content {
+    .secondary-nav a:hover { background: rgba(255,255,255,0.08); }
+
+    /* Contenu principal centré */
+    main {
       display: flex;
       justify-content: center;
       align-items: center;
-      height: calc(100vh - 120px);
+      min-height: calc(100vh - 140px); /* laisse place pour header + nav */
       text-align: center;
       padding: 20px;
     }
-    .content h2 {
-      color: #00bcd4;
-      margin-bottom: 10px;
+
+    .card {
+      background: white;
+      padding: 28px;
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(2, 50, 50, 0.06);
+      max-width: 780px;
+      width: 100%;
     }
-    .content button {
-      background-color: #00bcd4;
+
+    .card h2 {
+      color: #00bcd4;
+      margin: 0 0 8px 0;
+      font-size: 1.8rem;
+    }
+    .card p { margin: 0 0 16px 0; color: #275a5b; }
+
+    .action-btn {
+      background: #00bcd4;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 10px 18px;
+      border-radius: 8px;
       cursor: pointer;
-      border-radius: 5px;
-      margin-top: 15px;
-      font-weight: bold;
+      font-weight: 700;
     }
-    .content button:hover {
-      background-color: #0097a7;
+    .action-btn:hover { background: #0097a7; transform: translateY(-2px); }
+
+    /* petite responsivité */
+    @media (max-width: 640px) {
+      .header h1 { font-size: 1.1rem; }
+      .card { padding: 20px; }
+      .card h2 { font-size: 1.4rem; }
+      .secondary-nav { gap: 14px; font-size: 0.95rem; }
     }
   </style>
 </head>
 <body>
+
+  <!-- Header -->
   <header class="header">
     <h1>Salhi Shop</h1>
-    <div class="user-info">
-      <span id="displayName"></span>
-      <small id="displayEmail"></small>
-      <button id="loginBtn" onclick="window.location.href='login.html'">Se connecter</button>
-      <button id="logoutBtn" onclick="logout()" style="display:none;">Se déconnecter</button>
+
+    <div class="user-block">
+      <!-- pseudo s'affiche ici si connecté -->
+      <div id="pseudoWrap" class="pseudo" style="display:none;"></div>
+
+      <!-- email affiché en petit si tu veux (optionnel) -->
+      <div id="emailWrap" style="display:none;color:rgba(255,255,255,0.9);font-size:0.85rem;"></div>
+
+      <!-- boutons -->
+      <button id="loginBtn" class="btn-plain" onclick="window.location.href='login.html'">Se connecter</button>
+      <button id="logoutBtn" class="btn-plain" style="display:none;background:#f44336;color:white;">Se déconnecter</button>
     </div>
   </header>
 
-  <nav class="nav-bar">
+  <!-- barre secondaire -->
+  <nav class="secondary-nav">
     <a href="index.html">Accueil</a>
     <a href="#commandes">Commande</a>
     <a href="#info">Info</a>
   </nav>
 
-  <main id="mainContent" class="content">
-    <div>
+  <!-- contenu -->
+  <main>
+    <div class="card">
       <h2>Bienvenue sur Salhi Shop !</h2>
       <p>Découvrez nos produits et promotions.</p>
 
       <section id="commandes">
         <h3>Passer une commande</h3>
-        <button onclick="passerCommande()">Commander</button>
+        <button class="action-btn" id="orderBtn">Commander</button>
+      </section>
+
+      <section id="info" style="margin-top:18px;color:#567; font-size:0.95rem;">
+        <p>Infos : adresse du magasin, horaires, contact…</p>
       </section>
     </div>
   </main>
 
+  <!-- Script firebase + logique (attend DOM ready) -->
   <script type="module">
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener('DOMContentLoaded', () => {
+      /* imports Firebase (module top-level imports are OK in module scripts;
+         we keep them here to avoid running DOM code too early) */
       import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
       import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
       import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
@@ -136,43 +182,68 @@
       const auth = getAuth(app);
       const db = getFirestore(app);
 
-      const loginBtn = document.getElementById("loginBtn");
-      const logoutBtn = document.getElementById("logoutBtn");
-      const displayName = document.getElementById("displayName");
-      const displayEmail = document.getElementById("displayEmail");
+      // éléments DOM
+      const loginBtn = document.getElementById('loginBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const pseudoWrap = document.getElementById('pseudoWrap');
+      const emailWrap = document.getElementById('emailWrap');
+      const orderBtn = document.getElementById('orderBtn');
 
-      onAuthStateChanged(auth, async (user) => {
-        if (user && user.emailVerified) {
-          const docRef = doc(db, "users", user.uid);
-          const docSnap = await getDoc(docRef);
-          const pseudo = docSnap.exists() ? docSnap.data().pseudo : user.email;
-
-          displayName.innerText = pseudo;
-          displayEmail.innerText = user.email;
-          loginBtn.style.display = "none";
-          logoutBtn.style.display = "inline-block";
-        } else {
-          displayName.innerText = "";
-          displayEmail.innerText = "";
-          loginBtn.style.display = "inline-block";
-          logoutBtn.style.display = "none";
+      // Mettre à disposition functions globales pour onclick HTML
+      window.logout = async function () {
+        try {
+          await signOut(auth);
+          alert('Déconnecté avec succès !');
+          // rafraîchir UI (onAuthStateChanged va gérer)
+        } catch (err) {
+          alert('Erreur lors de la déconnexion : ' + err.message);
         }
-      });
+      };
 
-      window.logout = function() {
-        signOut(auth)
-          .then(() => alert("Déconnecté avec succès !"))
-          .catch(err => alert("Erreur : " + err.message));
-      }
-
-      window.passerCommande = function() {
+      window.passerCommande = function () {
         const user = auth.currentUser;
         if (!user || !user.emailVerified) {
-          alert("Vous devez être connecté et avoir vérifié votre email pour passer une commande.");
+          alert('Vous devez être connecté et avoir vérifié votre email pour passer une commande.');
           return;
         }
-        alert("Commande en cours !");
-      }
+        alert('Commande acceptée — implémenter la logique Firestore si besoin.');
+      };
+
+      // bouton de commande local aussi (évite onclick inline)
+      orderBtn.addEventListener('click', () => window.passerCommande());
+
+      // Surveille l'état d'authentification
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          // utilisateur connecté -> affiche pseudo (depuis Firestore si présent)
+          let pseudo = null;
+          try {
+            const docRef = doc(db, 'users', user.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) pseudo = docSnap.data().pseudo;
+          } catch (err) {
+            console.warn('Erreur lecture pseudo Firestore', err);
+          }
+
+          const shownName = pseudo || user.displayName || (user.email ? user.email.split('@')[0] : 'Utilisateur');
+          pseudoWrap.textContent = shownName;
+          pseudoWrap.style.display = 'inline-block';
+
+          // affiche aussi l'email en petit (optionnel)
+          emailWrap.textContent = user.email || '';
+          emailWrap.style.display = user.email ? 'inline-block' : 'none';
+
+          // toggle boutons
+          loginBtn.style.display = 'none';
+          logoutBtn.style.display = 'inline-block';
+        } else {
+          // pas connecté -> montre bouton connexion
+          pseudoWrap.style.display = 'none';
+          emailWrap.style.display = 'none';
+          loginBtn.style.display = 'inline-block';
+          logoutBtn.style.display = 'none';
+        }
+      });
     });
   </script>
 </body>
