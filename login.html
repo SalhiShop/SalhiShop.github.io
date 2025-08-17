@@ -1,135 +1,157 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Connexion - Salhi Shop</title>
+
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  sendEmailVerification,
-  sendPasswordResetEmail,
-  updateProfile
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    sendEmailVerification,
+    sendPasswordResetEmail,
+    updateProfile
+  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
-  authDomain: "salhishop-1.firebaseapp.com",
-  projectId: "salhishop-1",
-  storageBucket: "salhishop-1.firebasestorage.app",
-  messagingSenderId: "784629559774",
-  appId: "1:784629559774:web:388f9ca4c33e90d6fcad4f",
-  measurementId: "G-34G9453E7H"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
+    authDomain: "salhishop-1.firebaseapp.com",
+    projectId: "salhishop-1",
+    storageBucket: "salhishop-1.firebasestorage.app",
+    messagingSenderId: "784629559774",
+    appId: "1:784629559774:web:388f9ca4c33e90d6fcad4f",
+    measurementId: "G-34G9453E7H"
+  };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-const form = document.getElementById("loginForm");
-const errorMsg = document.getElementById("errorMsg");
-const forgotBtn = document.getElementById("forgotBtn");
-const toggleBtn = document.getElementById("toggleBtn");
+  // on attend que le DOM soit chargé avant de récupérer les éléments
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById("loginForm");
+    const errorMsg = document.getElementById("errorMsg");
+    const forgotBtn = document.getElementById("forgotBtn");
+    const toggleBtn = document.getElementById("toggleBtn");
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const pseudo = form.pseudo?.value?.trim();
-  const email = form.email.value.trim();
-  const password = form.password.value;
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorMsg.innerText = '';
 
-  try {
-    if (form.dataset.action === "signup") {
-      // création du compte
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const pseudo = form.pseudo?.value?.trim();
+      const email = form.email.value.trim();
+      const password = form.password.value;
+      const confirm = form.confirmPassword?.value;
 
-      // met à jour le displayName (utile pour firebase.currentUser.displayName)
-      if (pseudo) {
-        try {
-          await updateProfile(user, { displayName: pseudo });
-        } catch (updErr) {
-          console.warn('Impossible de mettre à jour le displayName:', updErr);
+      // validation simple côté client
+      if (form.dataset.action === "signup") {
+        if (!pseudo || pseudo.length < 2) {
+          errorMsg.innerText = "Le pseudo doit contenir au moins 2 caractères.";
+          return;
+        }
+        if (!email || !email.includes('@')) {
+          errorMsg.innerText = "Email invalide.";
+          return;
+        }
+        if (!password || password.length < 6) {
+          errorMsg.innerText = "Mot de passe trop faible (minimum 6 caractères).";
+          return;
+        }
+        if (password !== confirm) {
+          errorMsg.innerText = "Les mots de passe ne correspondent pas.";
+          return;
         }
       }
 
-      // Enregistre le document users/{uid} avec pseudo + email + createdAt
       try {
-        await setDoc(doc(db, "users", user.uid), {
-          pseudo: pseudo || null,
-          email: email || null,
-          createdAt: serverTimestamp()
-        }, { merge: true });
-      } catch (dbErr) {
-        console.warn('Erreur enregistrement users doc:', dbErr);
-      }
+        if (form.dataset.action === "signup") {
+          // création du compte
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
 
-      // envoi verification et feedback
+          // met à jour displayName si pseudo fourni
+          if (pseudo) {
+            try { await updateProfile(user, { displayName: pseudo }); } catch(e){ console.warn('updateProfile:', e); }
+          }
+
+          // enregistre users/{uid} avec pseudo + email + createdAt
+          try {
+            await setDoc(doc(db, "users", user.uid), {
+              pseudo: pseudo || null,
+              email: email || null,
+              createdAt: serverTimestamp()
+            }, { merge: true });
+          } catch (dbErr) {
+            console.warn('Erreur enregistrement users doc:', dbErr);
+          }
+
+          // envoi mail de vérification
+          try { await sendEmailVerification(user); } catch (verifErr){ console.warn('sendEmailVerification:', verifErr); }
+
+          alert("Compte créé ! Un email de vérification a été envoyé. Vérifie ta boîte mail.");
+          // rediriger vers index ou garder sur login (ici vers index)
+          window.location.href = "index.html";
+        } else {
+          // connexion
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          if (!userCredential.user.emailVerified) {
+            alert("Veuillez vérifier votre email avant de vous connecter.");
+            return;
+          }
+          window.location.href = "index.html";
+        }
+      } catch (err) {
+        // messages conviviaux
+        if (err.code === "auth/email-already-in-use") errorMsg.innerText = "Cet email est déjà utilisé.";
+        else if (err.code === "auth/invalid-email") errorMsg.innerText = "Email invalide.";
+        else if (err.code === "auth/weak-password") errorMsg.innerText = "Mot de passe trop faible (≥6 caractères).";
+        else if (err.code === "auth/wrong-password") errorMsg.innerText = "Mot de passe incorrect.";
+        else if (err.code === "auth/user-not-found") errorMsg.innerText = "Utilisateur introuvable.";
+        else errorMsg.innerText = err.message || "Erreur inconnue.";
+      }
+    });
+
+    forgotBtn.addEventListener("click", async () => {
+      const email = prompt("Entrez votre email pour réinitialiser le mot de passe :");
+      if (!email) return;
       try {
-        await sendEmailVerification(user);
-      } catch (verifErr) {
-        console.warn('Erreur envoi email vérification:', verifErr);
+        await sendPasswordResetEmail(auth, email);
+        alert("Email de réinitialisation envoyé !");
+      } catch (err) {
+        alert("Erreur : " + err.message);
       }
+    });
 
-      alert("Compte créé ! Vérifiez votre email (message envoyé).");
-      // redirection vers index (ou vers login si tu préfères)
-      window.location.href = "index.html";
-    } else {
-      // connexion
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      if (!userCredential.user.emailVerified) {
-        alert("Veuillez vérifier votre email avant de vous connecter.");
-        return;
+    toggleBtn.addEventListener("click", () => {
+      if (form.dataset.action === "signup") {
+        form.dataset.action = "login";
+        document.getElementById("formTitle").innerText = "Connexion";
+        document.getElementById("pseudoField").style.display = "none";
+        document.getElementById("confirmField").style.display = "none";
+        document.getElementById("submitBtn").innerText = "Se connecter";
+        toggleBtn.innerText = "Créer un compte";
+      } else {
+        form.dataset.action = "signup";
+        document.getElementById("formTitle").innerText = "Créer un compte";
+        document.getElementById("pseudoField").style.display = "block";
+        document.getElementById("confirmField").style.display = "block";
+        document.getElementById("submitBtn").innerText = "S'inscrire";
+        toggleBtn.innerText = "Déjà un compte ?";
       }
-      window.location.href = "index.html";
-    }
-  } catch (err) {
-    // messages d'erreur conviviaux
-    if (err.code === "auth/email-already-in-use") errorMsg.innerText = "Cet email est déjà utilisé.";
-    else if (err.code === "auth/invalid-email") errorMsg.innerText = "Email invalide.";
-    else if (err.code === "auth/weak-password") errorMsg.innerText = "Mot de passe trop faible (≥6 caractères).";
-    else if (err.code === "auth/wrong-password") errorMsg.innerText = "Mot de passe incorrect.";
-    else if (err.code === "auth/user-not-found") errorMsg.innerText = "Utilisateur introuvable.";
-    else errorMsg.innerText = err.message || "Erreur inconnue.";
-  }
-});
-
-forgotBtn.addEventListener("click", async () => {
-  const email = prompt("Entrez votre email pour réinitialiser le mot de passe :");
-  if (!email) return;
-  try {
-    await sendPasswordResetEmail(auth, email);
-    alert("Email de réinitialisation envoyé !");
-  } catch (err) {
-    alert("Erreur : " + err.message);
-  }
-});
-
-toggleBtn.addEventListener("click", () => {
-  if (form.dataset.action === "signup") {
-    form.dataset.action = "login";
-    document.getElementById("formTitle").innerText = "Connexion";
-    document.getElementById("pseudoField").style.display = "none";
-    document.getElementById("submitBtn").innerText = "Se connecter";
-    toggleBtn.innerText = "Créer un compte";
-  } else {
-    form.dataset.action = "signup";
-    document.getElementById("formTitle").innerText = "Créer un compte";
-    document.getElementById("pseudoField").style.display = "block";
-    document.getElementById("submitBtn").innerText = "S'inscrire";
-    toggleBtn.innerText = "Déjà un compte ?";
-  }
-  errorMsg.innerText = "";
-});
+      errorMsg.innerText = "";
+    });
+  });
 </script>
+
 </head>
 <body style="margin:0;font-family:Arial,sans-serif;background:#e0f7fa;">
 
@@ -145,10 +167,19 @@ toggleBtn.addEventListener("click", () => {
       <div id="pseudoField" style="display:none;margin-bottom:15px;">
         <input type="text" name="pseudo" placeholder="Pseudo" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;" />
       </div>
+
       <input type="email" name="email" placeholder="Email" required style="width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;margin-bottom:15px;" />
-      <input type="password" name="password" placeholder="Mot de passe" required style="width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;margin-bottom:15px;" />
+
+      <input type="password" id="password" name="password" placeholder="Mot de passe" required style="width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;margin-bottom:15px;" />
+
+      <!-- CHAMP CONFIRMATION -->
+      <div id="confirmField" style="display:none;margin-top:6px;margin-bottom:10px;">
+        <input type="password" name="confirmPassword" placeholder="Confirme le mot de passe" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:5px;margin-top:8px;" />
+      </div>
+
       <div id="errorMsg" style="color:red;margin-bottom:10px;height:18px;"></div>
       <button type="submit" id="submitBtn" style="width:100%;padding:10px;background:#00bcd4;color:white;border:none;border-radius:5px;cursor:pointer;margin-bottom:10px;">Se connecter</button>
+
       <button type="button" id="forgotBtn" style="background:none;border:none;color:#00bcd4;cursor:pointer;margin-bottom:10px;">Mot de passe oublié ?</button><br>
       <button type="button" id="toggleBtn" style="background:none;border:none;color:#00bcd4;cursor:pointer;">Créer un compte</button>
     </form>
