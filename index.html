@@ -2,11 +2,12 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Salhi Shop</title>
   <link rel="stylesheet" href="style.css">
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
@@ -23,42 +24,62 @@
 
     const profilePic = document.getElementById("profilePic");
     const userName = document.getElementById("userName");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
 
     onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = "login.html";
-        return;
+      if (user && user.emailVerified) {
+        profilePic.src = user.photoURL || "default-avatar.png";
+        userName.innerText = user.displayName || user.email;
+        loginBtn.style.display = "none";
+        logoutBtn.style.display = "inline-block";
+      } else {
+        profilePic.src = "default-avatar.png";
+        userName.innerText = "Invité";
+        loginBtn.style.display = "inline-block";
+        logoutBtn.style.display = "none";
       }
-      profilePic.src = user.photoURL || "default-avatar.png";
-      userName.innerText = user.displayName || user.email;
     });
 
-    window.logout = () => {
+    function logout() {
       signOut(auth).then(() => {
-        window.location.href = "login.html";
+        alert("Déconnecté avec succès !");
       });
-    };
+    }
   </script>
 </head>
 <body>
-  <div class="header">
+  <header class="header">
     <h1>Salhi Shop</h1>
-    <div class="profile">
-      <img id="profilePic" src="default-avatar.png" alt="Photo de profil">
-      <span id="userName"></span>
-      <button onclick="logout()">Se déconnecter</button>
+    <div>
+      <img id="profilePic" src="default-avatar.png" alt="Profil" class="avatar">
+      <span id="userName">Invité</span>
+      <button id="loginBtn" onclick="window.location.href='login.html'">Se connecter</button>
+      <button id="logoutBtn" onclick="logout()" style="display:none;">Se déconnecter</button>
     </div>
-  </div>
+  </header>
 
-  <div class="menu">
-    <button>Accueil</button>
-    <button>Commandes</button>
-    <button>Produits</button>
-  </div>
-
-  <div class="content">
+  <main class="content">
     <h2>Bienvenue sur Salhi Shop !</h2>
-    <p>Vous êtes connecté.</p>
-  </div>
+    <p>Découvrez nos produits et promotions.</p>
+
+    <section id="commandes">
+      <h3>Passer une commande</h3>
+      <button onclick="passerCommande()">Commander</button>
+    </section>
+  </main>
+
+  <script>
+    function passerCommande() {
+      const auth = firebase.auth();
+      const user = auth.currentUser;
+      if (!user || !user.emailVerified) {
+        alert("Vous devez être connecté et avoir vérifié votre email pour passer une commande.");
+        return;
+      }
+      alert("Commande en cours !");
+      // Ici tu peux ajouter l’intégration Firebase pour les commandes
+    }
+  </script>
 </body>
 </html>
