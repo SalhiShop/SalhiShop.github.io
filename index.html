@@ -28,6 +28,7 @@
     const logoutBtn = document.getElementById("logoutBtn");
     const displayName = document.getElementById("displayName");
     const displayEmail = document.getElementById("displayEmail");
+    const mainContent = document.getElementById("mainContent");
 
     onAuthStateChanged(auth, async (user) => {
       if (user && user.emailVerified) {
@@ -40,11 +41,20 @@
         displayEmail.innerText = user.email;
         loginBtn.style.display = "none";
         logoutBtn.style.display = "inline-block";
+
+        // Contenu centré non nécessaire si connecté
+        mainContent.style.justifyContent = "flex-start";
       } else {
-        displayName.innerText = "Invité";
+        displayName.innerText = "";
         displayEmail.innerText = "";
         loginBtn.style.display = "inline-block";
         logoutBtn.style.display = "none";
+
+        // Centrer le bouton si pas connecté
+        mainContent.style.display = "flex";
+        mainContent.style.justifyContent = "center";
+        mainContent.style.alignItems = "center";
+        mainContent.style.height = "70vh";
       }
     });
 
@@ -66,21 +76,23 @@
   <header class="header">
     <h1>Salhi Shop</h1>
     <div>
-      <span id="displayName">Invité</span><br>
+      <span id="displayName"></span><br>
       <small id="displayEmail"></small><br>
       <button id="loginBtn" onclick="window.location.href='login.html'">Se connecter</button>
       <button id="logoutBtn" onclick="logout()" style="display:none;">Se déconnecter</button>
     </div>
   </header>
 
-  <main class="content">
-    <h2>Bienvenue sur Salhi Shop !</h2>
-    <p>Découvrez nos produits et promotions.</p>
+  <main id="mainContent" class="content">
+    <div>
+      <h2>Bienvenue sur Salhi Shop !</h2>
+      <p>Découvrez nos produits et promotions.</p>
 
-    <section id="commandes">
-      <h3>Passer une commande</h3>
-      <button onclick="passerCommande()">Commander</button>
-    </section>
+      <section id="commandes">
+        <h3>Passer une commande</h3>
+        <button onclick="passerCommande()">Commander</button>
+      </section>
+    </div>
   </main>
 </body>
 </html>
