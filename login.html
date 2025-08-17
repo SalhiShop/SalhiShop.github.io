@@ -2,14 +2,12 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Connexion - Salhi Shop</title>
   <link rel="stylesheet" href="style.css">
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { 
-      getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
-      sendEmailVerification, sendPasswordResetEmail, onAuthStateChanged, signOut
-    } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
@@ -24,56 +22,64 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    auth.languageCode = 'fr';
-
-    window.signup = () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          sendEmailVerification(userCredential.user)
-            .then(() => alert("Email de vérification envoyé ! Vérifiez votre boîte mail."))
-            .catch((e) => alert(e.message));
-        })
-        .catch((e) => alert(e.message));
-    };
-
-    window.login = () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          if (!userCredential.user.emailVerified) {
-            alert("Veuillez vérifier votre email avant de vous connecter !");
-            return;
-          }
-          window.location.href = "index.html";
-        })
-        .catch((e) => alert(e.message));
-    };
-
-    window.resetPassword = () => {
-      const email = document.getElementById("email").value;
-      sendPasswordResetEmail(auth, email)
-        .then(() => alert("Email de réinitialisation envoyé !"))
-        .catch((e) => alert(e.message));
-    };
-
-    onAuthStateChanged(auth, (user) => {
-      if (user && user.emailVerified) {
-        window.location.href = "index.html";
+    async function register() {
+      const email = document.getElementById("regEmail").value;
+      const password = document.getElementById("regPassword").value;
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(userCredential.user);
+        alert("Compte créé ! Vérifiez votre email pour activer le compte.");
+      } catch (error) {
+        alert(error.message);
       }
-    });
+    }
+
+    async function login() {
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        if (userCredential.user.emailVerified) {
+          window.location.href = "index.html";
+        } else {
+          alert("Veuillez vérifier votre email avant de vous connecter.");
+        }
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function resetPassword() {
+      const email = document.getElementById("loginEmail").value;
+      try {
+        await sendPasswordResetEmail(auth, email);
+        alert("Email de réinitialisation envoyé !");
+      } catch (error) {
+        alert(error.message);
+      }
+    }
   </script>
 </head>
 <body>
-  <h1>Salhi Shop - Connexion</h1>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Mot de passe">
-  <div class="buttons">
-    <button onclick="signup()">Créer un compte</button>
-    <button onclick="login()">Se connecter</button>
-    <button onclick="resetPassword()">Mot de passe oublié ?</button>
-  </div>
+  <header class="header">
+    <h1>Salhi Shop - Connexion</h1>
+  </header>
+
+  <main class="content">
+    <section>
+      <h2>Connexion</h2>
+      <input type="email" id="loginEmail" placeholder="Email">
+      <input type="password" id="loginPassword" placeholder="Mot de passe">
+      <button onclick="login()">Se connecter</button>
+      <button onclick="resetPassword()">Mot de passe oublié ?</button>
+    </section>
+
+    <section>
+      <h2>Créer un compte</h2>
+      <input type="email" id="regEmail" placeholder="Email">
+      <input type="password" id="regPassword" placeholder="Mot de passe">
+      <button onclick="register()">S’inscrire</button>
+    </section>
+  </main>
 </body>
 </html>
