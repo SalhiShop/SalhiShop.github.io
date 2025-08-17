@@ -5,9 +5,11 @@
   <title>Login - Salhi Shop</title>
   <link rel="stylesheet" href="style.css">
   <script type="module">
-    // Import Firebase directement ici
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+    import { 
+      getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
+      sendEmailVerification, sendPasswordResetEmail, updateEmail, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
@@ -22,7 +24,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // Mettre les emails en français
+    // Langue des emails
     auth.languageCode = 'fr';
 
     window.signup = () => {
@@ -32,7 +34,7 @@
       createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
           sendEmailVerification(userCredential.user)
-            .then(() => alert("Email de vérification envoyé en français !"))
+            .then(() => alert("Email de vérification envoyé !"))
             .catch((e) => alert(e.message));
         })
         .catch((e) => alert(e.message));
@@ -52,6 +54,38 @@
         })
         .catch((e) => alert(e.message));
     };
+
+    // Mot de passe oublié
+    window.resetPassword = () => {
+      const email = document.getElementById("email").value;
+      sendPasswordResetEmail(auth, email)
+        .then(() => alert("Email de réinitialisation envoyé !"))
+        .catch((e) => alert(e.message));
+    };
+
+    // Modifier l'adresse email (utilisateur doit être connecté)
+    window.changeEmail = () => {
+      const newEmail = prompt("Entrez votre nouvelle adresse email :");
+      if (!newEmail) return;
+
+      const user = auth.currentUser;
+      if (user) {
+        updateEmail(user, newEmail)
+          .then(() => alert("Adresse email mise à jour !"))
+          .catch((e) => alert(e.message));
+      } else {
+        alert("Vous devez être connecté !");
+      }
+    };
+
+    // Surveiller l'état de connexion pour A2F / MFA
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("Utilisateur connecté :", user.email);
+        // Ici tu peux activer MFA si nécessaire
+        // Firebase Auth propose SMS ou Authenticator App
+      }
+    });
   </script>
 </head>
 <body>
@@ -61,5 +95,7 @@
   <input type="password" id="password" placeholder="Mot de passe">
   <button onclick="signup()">Créer un compte</button>
   <button onclick="login()">Se connecter</button>
+  <button onclick="resetPassword()">Mot de passe oublié ?</button>
+  <button onclick="changeEmail()">Modifier mon email</button>
 </body>
 </html>
