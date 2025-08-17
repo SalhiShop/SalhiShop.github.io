@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin - Salhi Shop</title>
+
+  <!-- Firebase compat CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <!-- Inline styling simple -->
+  <style>
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f0f7fa;color:#03363a}
+    header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#00bcd4;color:white;box-shadow:0 2px 6px rgba(0,0,0,0.12)}
+    header h1{margin:0;font-size:1.3rem}
+    .btn{background:white;color:#00bcd4;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.12)}
+    .container{max-width:1100px;margin:24px auto;padding:0 16px}
+    .panel{background:white;padding:18px;border-radius:10px;box-shadow:0 12px 30px rgba(2,50,50,0.06);margin-bottom:18px}
+    .row{display:flex;gap:12px;align-items:center}
+    input[type=text]{padding:8px;border-radius:8px;border:1px solid #ccc;width:320px}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:8px 10px;border-bottom:1px solid #eee;text-align:left}
+    th{background:#f7fdfd;color:#006064}
+    .small-muted{font-size:0.9rem;color:#567}
+    .admin-badge{background:#00bcd4;color:white;padding:6px 10px;border-radius:999px;font-weight:700}
+    .danger{background:#f44336;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer}
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Admin - Salhi Shop</h1>
+    <div>
+      <a href="index.html" class="btn" style="margin-right:8px;text-decoration:none">Retour</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Panel: admin management -->
+    <div class="panel">
+      <h3 style="margin:0 0 10px 0">Gestion des admins</h3>
+      <div class="row" style="margin-bottom:12px;">
+        <input id="newAdminEmail" type="text" placeholder="Nouvel admin (email)"/>
+        <button id="addAdminBtn" class="btn">Ajouter admin</button>
+        <div id="adminsList" style="margin-left:auto;"></div>
+      </div>
+      <div id="adminsInfo" class="small-muted">Chargement des admins...</div>
+    </div>
+
+    <!-- Panel: recherche et liste comptes -->
+    <div class="panel">
+      <h3 style="margin:0 0 10px 0">Comptes créés</h3>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <input id="searchInput" type="text" placeholder="Rechercher par pseudo, email ou uid"/>
+        <div class="small-muted">Résultats: <span id="count">0</span></div>
+      </div>
+
+      <table id="usersTable" aria-live="polite">
+        <thead>
+          <tr><th>Pseudo</th><th>Email</th><th>UID</th></tr>
+        </thead>
+        <tbody id="usersTbody">
+          <!-- remplie dynamiquement -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Firebase config (compat)
+    const firebaseConfig = {
+      apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
+      authDomain: "salhishop-1.firebaseapp.com",
+      projectId: "salhishop-1",
+      storageBucket: "salhishop-1.firebasestorage.app",
+      messagingSenderId: "784629559774",
+      appId: "1:784629559774:web:388f9ca4c33e90d6fcad4f",
+      measurementId: "G-34G9453E7H"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // DOM
+    const adminsInfo = document.getElementById('adminsInfo');
+    const adminsListDiv = document.getElementById('adminsList');
+    const newAdminEmail = document.getElementById('newAdminEmail');
+    const addAdminBtn = document.getElementById('addAdminBtn');
+    const usersTbody = document.getElementById('usersTbody');
+    const searchInput = document.getElementById('searchInput');
+    const countSpan = document.getElementById('count');
+
+    // helper: redirect non-admins
+    async function requireAdminOrRedirect(user){
+      try{
+        const docRef = db.collection('meta').doc('admins');
+        const snap = await docRef.get();
+        const admins = snap.exists ? (snap.data().emails || []) : [];
+        const email = (user && user.email) ? user.email.toLowerCase() : '';
+        if(!email || !admins.map(a=>a.toLowerCase()).includes(email)){
+          // not admin -> redirect
+          window.location.href = 'index.html';
+          return false;
+        }
+        return true;
+      }catch(e){
+        console.error('Erreur requireAdmin', e);
+        window.location.href = 'index.html';
+        return false;
+      }
+    }
+
+    // observe auth, puis check admin
+    auth.onAuthStateChanged(async (user) => {
+      if(!user){
+        window.location.href = 'index.html';
+        return;
+      }
+      const ok = await requireAdminOrRedirect(user);
+      if(ok){
+        loadAdminsUI();
+        loadUsers();
+      }
+    });
+
+    // charge la doc meta/admins et affiche
+    async function loadAdminsUI(){
+      try{
+        const docRef = db.collection('meta').doc('admins');
+        const snap = await docRef.get();
+        const admins = snap.exists ? (snap.data().emails || []) : [];
+
+        adminsInfo.textContent = 'Admins actuels : ' + (admins.length ? admins.join(', ') : '(aucun)');
+        // small pill list
+        adminsListDiv.innerHTML = '';
+        admins.forEach(a => {
+          const span = document.createElement('span');
+          span.textContent = a;
+          span.className = 'admin-badge';
+          span.style.marginLeft = '8px';
+          adminsListDiv.appendChild(span);
+        });
+      }catch(e){
+        adminsInfo.textContent = 'Erreur lecture admins';
+        console.error(e);
+      }
+    }
+
+    // ajouter admin (merge arrayUnion)
+    addAdminBtn.addEventListener('click', async () => {
+      const email = (newAdminEmail.value || '').trim().toLowerCase();
+      if(!email || !email.includes('@')) { alert('Email invalide'); return; }
+      try{
+        await db.collection('meta').doc('admins').set({ emails: firebase.firestore.FieldValue.arrayUnion(email) }, { merge:true });
+        newAdminEmail.value = '';
+        loadAdminsUI();
+        alert('Admin ajouté : ' + email);
+      }catch(e){
+        console.error(e);
+        alert('Erreur ajout admin : ' + e.message);
+      }
+    });
+
+    // charge la liste "users" depuis Firestore
+    // ATTENTION : cela dépend que ton signup ait bien créé des documents dans collection 'users'
+    async function loadUsers(){
+      usersTbody.innerHTML = '<tr><td colspan="3">Chargement…</td></tr>';
+      try{
+        const snapshot = await db.collection('users').get();
+        const rows = [];
+        snapshot.forEach(doc => {
+          const data = doc.data() || {};
+          // on suppose que chaque doc users contient { pseudo, email } mais email peut être absent
+          rows.push({
+            uid: doc.id,
+            pseudo: data.pseudo || '(vide)',
+            email: data.email || data.mail || '(non enregistré)'
+          });
+        });
+        renderUsers(rows);
+      }catch(e){
+        console.error('Erreur loadUsers', e);
+        usersTbody.innerHTML = '<tr><td colspan="3">Erreur chargement</td></tr>';
+      }
+    }
+
+    // rendering & search
+    let currentRows = [];
+    function renderUsers(rows){
+      currentRows = rows;
+      filterAndShow();
+    }
+
+    function filterAndShow(){
+      const q = (searchInput.value || '').trim().toLowerCase();
+      const filtered = currentRows.filter(r => {
+        return r.pseudo.toLowerCase().includes(q) || r.email.toLowerCase().includes(q) || r.uid.toLowerCase().includes(q);
+      });
+      countSpan.textContent = filtered.length;
+      usersTbody.innerHTML = '';
+      if(filtered.length === 0){
+        usersTbody.innerHTML = '<tr><td colspan="3">Aucun compte trouvé</td></tr>';
+        return;
+      }
+      filtered.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(r.pseudo)}</td><td>${escapeHtml(r.email)}</td><td style="font-family:monospace">${escapeHtml(r.uid)}</td>`;
+        usersTbody.appendChild(tr);
+      });
+    }
+
+    searchInput.addEventListener('input', filterAndShow);
+
+    // tiny escape
+    function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+    // remonter si admins ou users changent en temps réel ? on peut aussi ajouter listeners onSnapshot si tu veux
+  </script>
+</body>
+</html>
