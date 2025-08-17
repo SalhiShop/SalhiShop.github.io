@@ -24,74 +24,85 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    async function register() {
-      const email = document.getElementById("regEmail").value;
-      const password = document.getElementById("regPassword").value;
-      const pseudo = document.getElementById("regPseudo").value;
+    const form = document.getElementById("loginForm");
+    const errorMsg = document.getElementById("errorMsg");
+    const forgotBtn = document.getElementById("forgotBtn");
 
-      if (!pseudo) {
-        alert("Veuillez entrer un pseudo.");
-        return;
-      }
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const pseudo = form.pseudo.value.trim();
+      const email = form.email.value.trim();
+      const password = form.password.value;
 
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        // Enregistrer le pseudo dans Firestore
-        await setDoc(doc(db, "users", userCredential.user.uid), { pseudo });
-        await sendEmailVerification(userCredential.user);
-        alert("Compte créé ! Vérifiez votre email pour activer le compte.");
-      } catch (error) {
-        alert(error.message);
-      }
-    }
-
-    async function login() {
-      const email = document.getElementById("loginEmail").value;
-      const password = document.getElementById("loginPassword").value;
-      try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        if (userCredential.user.emailVerified) {
+        if (form.dataset.action === "signup") {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          await sendEmailVerification(userCredential.user);
+          await setDoc(doc(db, "users", userCredential.user.uid), { pseudo: pseudo });
+          alert("Compte créé ! Vérifiez votre email.");
           window.location.href = "index.html";
         } else {
-          alert("Veuillez vérifier votre email avant de vous connecter.");
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          if (!userCredential.user.emailVerified) {
+            alert("Veuillez vérifier votre email avant de vous connecter.");
+            return;
+          }
+          window.location.href = "index.html";
         }
-      } catch (error) {
-        alert(error.message);
+      } catch (err) {
+        if (err.code === "auth/email-already-in-use") errorMsg.innerText = "Cet email est déjà utilisé.";
+        else if (err.code === "auth/invalid-email") errorMsg.innerText = "Email invalide.";
+        else if (err.code === "auth/weak-password") errorMsg.innerText = "Mot de passe trop faible (≥6 caractères).";
+        else if (err.code === "auth/wrong-password") errorMsg.innerText = "Mot de passe incorrect.";
+        else if (err.code === "auth/user-not-found") errorMsg.innerText = "Utilisateur introuvable.";
+        else errorMsg.innerText = err.message;
       }
-    }
+    });
 
-    async function resetPassword() {
-      const email = document.getElementById("loginEmail").value;
+    forgotBtn.addEventListener("click", async () => {
+      const email = prompt("Entrez votre email pour réinitialiser le mot de passe :");
+      if (!email) return;
       try {
         await sendPasswordResetEmail(auth, email);
         alert("Email de réinitialisation envoyé !");
-      } catch (error) {
-        alert(error.message);
+      } catch (err) {
+        alert("Erreur : " + err.message);
       }
+    });
+
+    function toggleAction() {
+      const action = form.dataset.action;
+      if (action === "signup") {
+        form.dataset.action = "login";
+        document.getElementById("formTitle").innerText = "Connexion";
+        document.getElementById("pseudoField").style.display = "none";
+        document.getElementById("submitBtn").innerText = "Se connecter";
+        document.getElementById("toggleBtn").innerText = "Créer un compte";
+      } else {
+        form.dataset.action = "signup";
+        document.getElementById("formTitle").innerText = "Créer un compte";
+        document.getElementById("pseudoField").style.display = "block";
+        document.getElementById("submitBtn").innerText = "S'inscrire";
+        document.getElementById("toggleBtn").innerText = "Déjà un compte ?";
+      }
+      errorMsg.innerText = "";
     }
   </script>
 </head>
 <body>
-  <header class="header">
-    <h1>Salhi Shop - Connexion</h1>
-  </header>
-
-  <main class="content">
-    <section>
-      <h2>Connexion</h2>
-      <input type="email" id="loginEmail" placeholder="Email">
-      <input type="password" id="loginPassword" placeholder="Mot de passe">
-      <button onclick="login()">Se connecter</button>
-      <button onclick="resetPassword()">Mot de passe oublié ?</button>
-    </section>
-
-    <section>
-      <h2>Créer un compte</h2>
-      <input type="text" id="regPseudo" placeholder="Pseudo">
-      <input type="email" id="regEmail" placeholder="Email">
-      <input type="password" id="regPassword" placeholder="Mot de passe">
-      <button onclick="register()">S’inscrire</button>
-    </section>
-  </main>
+  <div class="login-container">
+    <form id="loginForm" data-action="login">
+      <h2 id="formTitle">Connexion</h2>
+      <div id="pseudoField" style="display:none;">
+        <input type="text" name="pseudo" placeholder="Pseudo" />
+      </div>
+      <input type="email" name="email" placeholder="Email" required />
+      <input type="password" name="password" placeholder="Mot de passe" required />
+      <div id="errorMsg" style="color:red; margin:5px 0;"></div>
+      <button type="submit" id="submitBtn">Se connecter</button>
+      <button type="button" id="forgotBtn" class="link-btn">Mot de passe oublié ?</button>
+      <button type="button" id="toggleBtn" class="link-btn" onclick="toggleAction()">Créer un compte</button>
+    </form>
+  </div>
 </body>
 </html>
