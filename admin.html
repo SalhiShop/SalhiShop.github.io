@@ -1,477 +1,190 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Admin - Salhi Shop</title>
-
-<!-- Firebase compat CDN -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
-<style>
-  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f0f7fa;color:#03363a}
-  header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:#00bcd4;color:white;box-shadow:0 2px 6px rgba(0,0,0,0.12)}
-  header h1{margin:0;font-size:1.3rem}
-  .container{max-width:1200px;margin:22px auto;padding:0 16px}
-  .tabs{display:flex;gap:8px;margin-bottom:12px}
-  .tab-btn{padding:8px 12px;border-radius:8px;background:#e0f7fa;border:1px solid #bfeff5;cursor:pointer;font-weight:700}
-  .tab-btn.active{background:#00bcd4;color:white;border-color:#00bcd4}
-  .panel{background:white;padding:16px;border-radius:10px;box-shadow:0 12px 30px rgba(2,50,50,0.06);margin-bottom:18px}
-  .row{display:flex;gap:12px;align-items:center}
-  input[type=text], select {padding:8px;border-radius:8px;border:1px solid #ccc}
-  table{width:100%;border-collapse:collapse;margin-top:12px}
-  th,td{padding:8px 10px;border-bottom:1px solid #eee;text-align:left}
-  th{background:#f7fdfd;color:#006064}
-  .admin-badge{background:#00bcd4;color:white;padding:6px 10px;border-radius:999px;font-weight:700;margin-right:8px;display:inline-flex;align-items:center;gap:8px}
-  .action-btn{background:#00bcd4;color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700}
-  .danger{background:#f44336;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer}
-  .muted{color:#667; font-size:0.9rem}
-  .small{font-size:0.9rem;color:#666}
-  .flex-between{display:flex;justify-content:space-between;align-items:center}
-  .controls{display:flex;gap:8px;align-items:center}
-  @media (max-width:900px){ .row{flex-direction:column;align-items:stretch} }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Salhi Shop</title>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 </head>
-<body>
+<body style="margin:0;font-family:Arial,sans-serif;background:#f0f4f8;">
 
-<header>
-  <h1>Admin - Salhi Shop</h1>
-  <div>
-    <a href="index.html" style="background:white;color:#00bcd4;padding:8px 12px;border-radius:6px;text-decoration:none;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.12);">Retour</a>
-  </div>
-</header>
+  <header style="display:flex;justify-content:space-between;align-items:center;background:#00bcd4;padding:10px 20px;color:white;">
+    <h1 style="margin:0;font-size:22px;">Admin - Salhi Shop</h1>
+    <button onclick="window.location.href='index.html'" style="background:white;color:#00bcd4;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,0.3);">
+      Retour
+    </button>
+  </header>
 
-<div class="container">
+  <main style="padding:20px;">
+    <h2 style="color:#00bcd4;">Gestion des utilisateurs</h2>
+    <div id="usersContainer" style="background:white;padding:15px;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,0.2);margin-bottom:20px;"></div>
 
-  <!-- Admin controls -->
-  <div class="panel">
-    <div class="flex-between">
-      <div>
-        <strong>Gestion des admins</strong>
-        <div class="small muted">Ajoute / supprime les adresses admin (utilisées pour restreindre l'accès).</div>
-      </div>
-      <div class="controls">
-        <input id="newAdminEmail" type="text" placeholder="Email admin à ajouter" />
-        <button id="addAdminBtn" class="action-btn">Ajouter admin</button>
-      </div>
+    <h2 style="color:#00bcd4;">Gestion des admins</h2>
+    <div id="adminsContainer" style="background:white;padding:15px;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,0.2);">
+      <button id="addAdminBtn" style="padding:8px 12px;border:none;border-radius:5px;background:#00bcd4;color:white;cursor:pointer;">
+        ➕ Ajouter un admin
+      </button>
     </div>
+  </main>
 
-    <div style="margin-top:12px" id="adminsContainer">Chargement des admins…</div>
-  </div>
+  <!-- === SCRIPT PRINCIPAL FIREBASE + EMAILJS === -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { getFirestore, collection, getDocs, updateDoc, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-  <!-- Tabs -->
-  <div class="tabs">
-    <button id="tabUsers" class="tab-btn active">Utilisateurs</button>
-    <button id="tabOrders" class="tab-btn">Commandes en cours</button>
-  </div>
+    // --- Firebase config ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
+      authDomain: "salhishop-1.firebaseapp.com",
+      projectId: "salhishop-1",
+      storageBucket: "salhishop-1.firebasestorage.app",
+      messagingSenderId: "784629559774",
+      appId: "1:784629559774:web:388f9ca4c33e90d6fcad4f",
+      measurementId: "G-34G9453E7H"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-  <!-- Users panel -->
-  <div id="usersPanel" class="panel">
-    <div class="row" style="justify-content:space-between;">
-      <div style="display:flex;gap:12px;align-items:center;">
-        <input id="searchUsers" type="text" placeholder="Rechercher par pseudo / email / uid" style="width:360px" />
-        <div class="small muted">Résultats : <span id="usersCount">0</span></div>
-      </div>
-      <div class="muted">Note : supprimer un utilisateur supprime son document Firestore, pas le compte Auth.</div>
-    </div>
+    // --- Initialisation EmailJS (clé publique) ---
+    (function() {
+      emailjs.init("foHh6pzezeY7gN_hC"); // ⚡ Clé publique
+    })();
 
-    <table aria-live="polite">
-      <thead>
-        <tr><th>Pseudo</th><th>Email</th><th>UID</th><th>Actions</th></tr>
-      </thead>
-      <tbody id="usersTbody"><tr><td colspan="4">Chargement…</td></tr></tbody>
-    </table>
-  </div>
-
-  <!-- Orders panel -->
-  <div id="ordersPanel" class="panel" style="display:none;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <div style="display:flex;gap:12px;align-items:center;">
-        <input id="searchOrders" type="text" placeholder="Rechercher nom, email, id" style="width:360px" />
-        <select id="filterStatus">
-          <option value="">Tous les statuts (par défaut : commandes en cours)</option>
-          <option value="pending">pending</option>
-          <option value="preparing">preparing</option>
-          <option value="shipped">shipped</option>
-          <option value="delivered">delivered</option>
-          <option value="cancelled">cancelled</option>
-        </select>
-      </div>
-      <div class="small muted">Affichage par défaut : commandes en cours (pending / preparing / shipped).</div>
-    </div>
-
-    <div id="ordersList">Chargement des commandes…</div>
-  </div>
-
-</div>
-
-<!-- EmailJS SDK (pour envoi côté client) -->
-<script src="https://cdn.emailjs.com/sdk/3.2.0/email.min.js"></script>
-
-<script>
-  // ---------------- Firebase init (compat) ----------------
-  const firebaseConfig = {
-    apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
-    authDomain: "salhishop-1.firebaseapp.com",
-    projectId: "salhishop-1",
-    storageBucket: "salhishop-1.firebasestorage.app",
-    messagingSenderId: "784629559774",
-    appId: "1:784629559774:web:388f9ca4c33e90d6fcad4f",
-    measurementId: "G-34G9453E7H"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-
-  // ---------------- EmailJS init ----------------
-  // Utilise ta Public API key comme "user id" côté client
-  // (NE PAS mettre la clé privée ici)
-  emailjs.init('foHh6pzezeY7gN_hC'); // <<< TA PUBLIC API KEY
-
-  // ---------------- DOM refs ----------------
-  const tabUsers = document.getElementById('tabUsers');
-  const tabOrders = document.getElementById('tabOrders');
-  const usersPanel = document.getElementById('usersPanel');
-  const ordersPanel = document.getElementById('ordersPanel');
-
-  const newAdminEmail = document.getElementById('newAdminEmail');
-  const addAdminBtn = document.getElementById('addAdminBtn');
-  const adminsContainer = document.getElementById('adminsContainer');
-
-  const searchUsers = document.getElementById('searchUsers');
-  const usersTbody = document.getElementById('usersTbody');
-  const usersCount = document.getElementById('usersCount');
-
-  const searchOrders = document.getElementById('searchOrders');
-  const filterStatus = document.getElementById('filterStatus');
-  const ordersList = document.getElementById('ordersList');
-
-  // caches
-  let currentAdmins = [];
-  let currentUsers = [];
-  let currentOrders = [];
-
-  // Tab switching
-  tabUsers.onclick = () => {
-    tabUsers.classList.add('active'); tabOrders.classList.remove('active');
-    usersPanel.style.display = ''; ordersPanel.style.display = 'none';
-  };
-  tabOrders.onclick = () => {
-    tabOrders.classList.add('active'); tabUsers.classList.remove('active');
-    ordersPanel.style.display = ''; usersPanel.style.display = 'none';
-  };
-
-  // require admin
-  async function requireAdminOrRedirect(user){
-    try {
-      if(!user) { window.location.href = 'index.html'; return false; }
-      const docSnap = await db.collection('meta').doc('admins').get();
-      const admins = docSnap.exists ? (docSnap.data().emails || []) : [];
-      const emailsLower = admins.map(a => (a||'').toLowerCase());
-      if(!emailsLower.includes((user.email||'').toLowerCase())){
-        window.location.href = 'index.html';
-        return false;
-      }
-      return true;
-    } catch(err) {
-      console.error('Erreur requireAdmin', err);
-      window.location.href = 'index.html';
-      return false;
-    }
-  }
-
-  // onAuth check
-  auth.onAuthStateChanged(async (user) => {
-    if(!user) { window.location.href = 'index.html'; return; }
-    const ok = await requireAdminOrRedirect(user);
-    if(!ok) return;
-    initRealtime();
-  });
-
-  // listeners (realtime)
-  function initRealtime(){
-    // admins doc
-    db.collection('meta').doc('admins').onSnapshot(snap => {
-      const admins = snap.exists ? (snap.data().emails || []) : [];
-      currentAdmins = admins;
-      renderAdmins();
-    }, err => {
-      adminsContainer.textContent = 'Erreur lecture admins';
-      console.error(err);
-    });
-
-    // users
-    db.collection('users').onSnapshot(snapshot => {
-      const rows = [];
-      snapshot.forEach(doc => {
-        const d = doc.data() || {};
-        rows.push({ uid: doc.id, pseudo: d.pseudo || '(vide)', email: d.email || '(non renseigné)', createdAt: d.createdAt || null });
-      });
-      currentUsers = rows;
-      renderUsers();
-    }, err => {
-      usersTbody.innerHTML = '<tr><td colspan="4">Erreur chargement users</td></tr>';
-      console.error(err);
-    });
-
-    // orders
-    db.collection('orders').orderBy('createdAt','desc').onSnapshot(snapshot => {
-      const rows = [];
-      snapshot.forEach(doc => {
-        rows.push({ id: doc.id, ...(doc.data() || {}) });
-      });
-      currentOrders = rows;
-      renderOrders();
-    }, err => {
-      ordersList.innerHTML = 'Erreur chargement commandes : ' + err.message;
-      console.error(err);
-    });
-  }
-
-  // ---------- Admins UI ----------
-  function renderAdmins(){
-    if(!currentAdmins || currentAdmins.length === 0){
-      adminsContainer.innerHTML = '<div class="small muted">Aucun admin défini</div>';
-      return;
-    }
-    adminsContainer.innerHTML = '';
-    currentAdmins.forEach(email => {
-      const span = document.createElement('span');
-      span.className = 'admin-badge';
-      span.innerText = email;
-      // delete btn
-      const delBtn = document.createElement('button');
-      delBtn.textContent = '✖';
-      delBtn.style.marginLeft = '8px';
-      delBtn.style.background = 'transparent';
-      delBtn.style.border = 'none';
-      delBtn.style.color = 'white';
-      delBtn.style.cursor = 'pointer';
-      delBtn.title = 'Supprimer admin';
-      delBtn.onclick = async (e) => {
-        e.stopPropagation();
-        if(!confirm('Supprimer admin ' + email + ' ?')) return;
-        try {
-          await db.collection('meta').doc('admins').set({ emails: firebase.firestore.FieldValue.arrayRemove(email.toLowerCase()) }, { merge:true });
-          alert('Admin supprimé');
-        } catch(err){ console.error(err); alert('Erreur suppression admin: '+err.message); }
-      };
-      span.appendChild(delBtn);
-      adminsContainer.appendChild(span);
-    });
-  }
-
-  addAdminBtn.addEventListener('click', async () => {
-    const email = (newAdminEmail.value || '').trim().toLowerCase();
-    if(!email || !email.includes('@')) { alert('Email invalide'); return; }
-    try {
-      await db.collection('meta').doc('admins').set({ emails: firebase.firestore.FieldValue.arrayUnion(email) }, { merge:true });
-      newAdminEmail.value = '';
-      alert('Admin ajouté : ' + email);
-    } catch(err){ console.error(err); alert('Erreur ajout admin: '+err.message); }
-  });
-
-  // ---------- Users UI ----------
-  function renderUsers(){
-    const q = (searchUsers.value || '').trim().toLowerCase();
-    const filtered = currentUsers.filter(u => {
-      return u.pseudo.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.uid.toLowerCase().includes(q);
-    });
-    usersCount.textContent = filtered.length;
-    usersTbody.innerHTML = '';
-    if(filtered.length === 0){
-      usersTbody.innerHTML = '<tr><td colspan="4">Aucun utilisateur trouvé</td></tr>';
-      return;
-    }
-    filtered.forEach(u => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${escapeHtml(u.pseudo)}</td>
-                      <td>${escapeHtml(u.email)}</td>
-                      <td style="font-family:monospace">${escapeHtml(u.uid)}</td>
-                      <td>
-                        <button class="action-btn" data-edit="${u.uid}">Modifier pseudo</button>
-                        <button class="danger" data-delete="${u.uid}">Supprimer</button>
-                      </td>`;
-      usersTbody.appendChild(tr);
-    });
-
-    // wire buttons
-    document.querySelectorAll('[data-edit]').forEach(btn => {
-      btn.onclick = async () => {
-        const uid = btn.getAttribute('data-edit');
-        const newPseudo = prompt('Nouveau pseudo :');
-        if(!newPseudo) return;
-        try {
-          await db.collection('users').doc(uid).update({ pseudo: newPseudo });
-          alert('Pseudo mis à jour');
-        } catch(err){ console.error(err); alert('Erreur update pseudo: '+err.message); }
-      };
-    });
-
-    document.querySelectorAll('[data-delete]').forEach(btn => {
-      btn.onclick = async () => {
-        const uid = btn.getAttribute('data-delete');
-        if(!confirm('Supprimer le document utilisateur (users/'+uid+') ? Le compte Auth reste inchangé.')) return;
-        try {
-          await db.collection('users').doc(uid).delete();
-          alert('Document utilisateur supprimé.');
-        } catch(err){ console.error(err); alert('Erreur suppression user doc: '+err.message); }
-      };
-    });
-  }
-
-  searchUsers.addEventListener('input', renderUsers);
-
-  // ---------- Orders UI (avec EmailJS envoi) ----------
-  function renderOrders(){
-    const q = (searchOrders.value || '').trim().toLowerCase();
-    const statusFilter = filterStatus.value;
-    // default show only in-progress statuses if no filter
-    let rows = currentOrders.slice();
-
-    if(!statusFilter){
-      rows = rows.filter(r => ['pending','preparing','shipped'].includes((r.status||'').toLowerCase()));
-    } else {
-      rows = rows.filter(r => (r.status||'').toLowerCase() === statusFilter.toLowerCase());
+    // --- Vérification admin ---
+    async function checkIfAdmin(user) {
+      const adminsRef = collection(db, "admins");
+      const adminsSnap = await getDocs(adminsRef);
+      const adminEmails = adminsSnap.docs.map(doc => doc.id);
+      return adminEmails.includes(user.email);
     }
 
-    rows = rows.filter(r => {
-      const matchQ = !q || (r.name && r.name.toLowerCase().includes(q)) || (r.email && r.email.toLowerCase().includes(q)) || (r.id && r.id.toLowerCase().includes(q));
-      return matchQ;
-    });
+    // --- Affichage utilisateurs ---
+    async function loadUsers() {
+      const usersRef = collection(db, "users");
+      const usersSnap = await getDocs(usersRef);
+      const container = document.getElementById("usersContainer");
+      container.innerHTML = "";
 
-    if(rows.length === 0){
-      ordersList.innerHTML = '<div class="small muted">Aucune commande trouvée</div>';
-      return;
-    }
+      usersSnap.forEach((userDoc) => {
+        const data = userDoc.data();
+        const div = document.createElement("div");
+        div.style = "display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ddd;padding:6px 0;";
 
-    ordersList.innerHTML = '';
-    rows.forEach(order => {
-      const created = (order.createdAt && order.createdAt.seconds) ? new Date(order.createdAt.seconds*1000).toLocaleString() : '—';
-      const div = document.createElement('div');
-      div.style.borderBottom = '1px solid #eee';
-      div.style.padding = '12px 0';
-      div.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center">
+        div.innerHTML = `
           <div>
-            <strong>${escapeHtml(order.name || '(client)')}</strong> — <small>${escapeHtml(order.email || '')}</small><br>
-            <small class="small">${escapeHtml(order.street || '')} — ${escapeHtml(order.city||'')}</small><br>
-            <small class="small">Tel: ${escapeHtml(order.phone||'')}</small>
+            <strong>${data.pseudo || "(Sans pseudo)"}</strong><br>
+            <small>${data.email || "??"}</small>
           </div>
-          <div style="text-align:right">
-            <div>ID: <code>${escapeHtml(order.id)}</code></div>
-            <div>Créé: <small>${escapeHtml(created)}</small></div>
-            <div style="margin-top:6px">Total: <strong>${(order.total||0).toFixed(2)} CHF</strong></div>
+          <div style="display:flex;gap:6px;">
+            <button class="edit-btn" data-id="${userDoc.id}" style="background:#00796b;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">✏️</button>
+            <button class="delete-btn" data-id="${userDoc.id}" style="background:#b71c1c;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">🗑️</button>
           </div>
-        </div>
+        `;
 
-        <div style="margin-top:8px;padding:8px;background:#fafafa;border-radius:8px">
-          ${((order.items||[]).map(it => `<div style="display:flex;justify-content:space-between"><div>${escapeHtml(it.name)} × ${it.qty}</div><div>${(it.price*it.qty).toFixed(2)} CHF</div></div>`).join(''))}
-        </div>
+        container.appendChild(div);
+      });
 
-        <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
-          <select data-order-id="${order.id}" class="status-select" style="padding:6px;border-radius:6px">
-            <option value="pending" ${order.status==='pending'?'selected':''}>pending</option>
-            <option value="preparing" ${order.status==='preparing'?'selected':''}>preparing</option>
-            <option value="shipped" ${order.status==='shipped'?'selected':''}>shipped</option>
-            <option value="delivered" ${order.status==='delivered'?'selected':''}>delivered</option>
-            <option value="cancelled" ${order.status==='cancelled'?'selected':''}>cancelled</option>
-          </select>
-          <button data-delete-order="${order.id}" class="danger">Supprimer</button>
-          <div style="margin-left:auto" class="muted">UID: <code style="font-family:monospace">${escapeHtml(order.uid||'')}</code></div>
-        </div>
-      `;
-      ordersList.appendChild(div);
-    });
+      // gestion édition
+      document.querySelectorAll(".edit-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const uid = btn.dataset.id;
+          const newPseudo = prompt("Nouveau pseudo :");
+          if (newPseudo) {
+            await updateDoc(doc(db, "users", uid), { pseudo: newPseudo });
+            loadUsers();
+          }
+        });
+      });
 
-    // wire status selects : mise à jour + envoi EmailJS
-    document.querySelectorAll('.status-select').forEach(sel => {
-      sel.onchange = async () => {
-        const id = sel.getAttribute('data-order-id');
-        const val = sel.value;
-        await updateOrderStatusAndNotify(id, val);
-      };
-    });
-
-    // wire deletes
-    document.querySelectorAll('[data-delete-order]').forEach(btn => {
-      btn.onclick = async () => {
-        const id = btn.getAttribute('data-delete-order');
-        if(!confirm('Supprimer la commande ' + id + ' ?')) return;
-        try {
-          await db.collection('orders').doc(id).delete();
-          alert('Commande supprimée');
-        } catch(err){ console.error(err); alert('Erreur suppression commande: '+err.message); }
-      };
-    });
-  }
-
-  searchOrders.addEventListener('input', renderOrders);
-  filterStatus.addEventListener('change', renderOrders);
-
-  // ---------- updateOrderStatusAndNotify (core) ----------
-  async function updateOrderStatusAndNotify(orderId, newStatus){
-    try {
-      const order = (currentOrders || []).find(o => o.id === orderId);
-      if(!order) { alert('Commande introuvable (cache). Recharge la page.'); return; }
-      const oldStatus = order.status || '—';
-
-      // 1) update Firestore
-      await db.collection('orders').doc(orderId).update({ status: newStatus });
-
-      // 2) préparer params pour EmailJS
-      const itemsHtml = (order.items || []).map(it =>
-        `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #eee">
-           <div>${escapeHtml(it.name)} × ${escapeHtml(String(it.qty))}</div>
-           <div>${Number(it.price * it.qty).toFixed(2)} CHF</div>
-         </div>`
-      ).join('');
-
-      const params = {
-        to_name: order.name || '',
-        to_email: order.email || '',
-        order_id: orderId,
-        old_status: oldStatus,
-        new_status: newStatus,
-        items_html: itemsHtml,
-        items_text: (order.items||[]).map(it=>`- ${it.name} × ${it.qty} → ${(it.price*it.qty).toFixed(2)} CHF`).join('\n'),
-        subtotal: (order.subtotal||0).toFixed(2),
-        shipment: (order.shipment||0).toFixed(2),
-        total: (order.total||0).toFixed(2),
-        comment: order.comment || '',
-        order_url: window.location.origin + '/log.html#' + orderId
-      };
-
-      // 3) send email via EmailJS
-      // TES IDENTIFIANTS (déjà remplis) :
-      const serviceID = 'service_y2p5qvk';       // <-- ton Service ID
-      const templateID = 'template_xxx';         // <-- ton Template ID
-
-      if (window.emailjs && typeof emailjs.send === 'function') {
-        try {
-          await emailjs.send(serviceID, templateID, params);
-          console.log('Email envoyé pour commande', orderId);
-          alert('Statut mis à jour et email envoyé au client (' + (order.email||'') + ').');
-        } catch (e) {
-          console.error('EmailJS send error', e);
-          alert('Statut mis à jour mais envoi du mail a échoué (voir console).');
-        }
-      } else {
-        console.warn('EmailJS non configuré — paramètres:', params);
-        alert('Statut mis à jour (EmailJS non configuré).');
-      }
-
-    } catch (err) {
-      console.error('Erreur updateOrderStatusAndNotify', err);
-      alert('Erreur lors de la mise à jour du statut : ' + (err.message || err));
+      // gestion suppression
+      document.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const uid = btn.dataset.id;
+          if (confirm("Supprimer ce compte ?")) {
+            await deleteDoc(doc(db, "users", uid));
+            loadUsers();
+          }
+        });
+      });
     }
-  }
 
-  // ---------- tiny escape ----------
-  function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    // --- Ajouter un admin ---
+    document.getElementById("addAdminBtn").addEventListener("click", async () => {
+      const email = prompt("Email de l'admin à ajouter :");
+      if (!email) return;
+      await setDoc(doc(db, "admins", email), { createdAt: new Date() });
+      alert("Admin ajouté : " + email);
+    });
 
-</script>
+    // --- Vérifier connexion ---
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+      const isAdmin = await checkIfAdmin(user);
+      if (!isAdmin) {
+        alert("Accès refusé : pas admin");
+        window.location.href = "index.html";
+        return;
+      }
+      loadUsers();
+    });
+  </script>
+
+  <!-- === SCRIPT TEST ENVOI EMAIL === -->
+  <script>
+    // Ajoute le bouton test email
+    const testBtnContainer = document.createElement("div");
+    testBtnContainer.style = "margin-top:15px;";
+    testBtnContainer.innerHTML = `
+      <button id="testEmailBtn" style="padding:8px 12px;border:none;border-radius:5px;background:#006d6f;color:white;cursor:pointer;">
+        📧 Tester envoi email
+      </button>
+      <span style="font-size:12px;color:#555;margin-left:8px;">Envoi via EmailJS avec ton template.</span>
+    `;
+    document.getElementById("adminsContainer").appendChild(testBtnContainer);
+
+    document.getElementById("testEmailBtn").addEventListener("click", async () => {
+      try {
+        const toEmail = prompt("Adresse email de test :", "");
+        if (!toEmail) return;
+        const toName = prompt("Nom du destinataire :", "Client");
+
+        const itemsHtml = `
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #eee">
+            <div>Sandwich Jambon × 2</div><div>13.00 CHF</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #eee">
+            <div>Boisson × 1</div><div>2.50 CHF</div>
+          </div>
+        `;
+
+        const params = {
+          to_name: toName,
+          to_email: toEmail,
+          order_id: "TEST-" + Math.random().toString(36).substring(2, 8),
+          old_status: "pending",
+          new_status: "preparing",
+          items_html: itemsHtml,
+          items_text: "- Sandwich Jambon × 2 → 13.00 CHF\n- Boisson × 1 → 2.50 CHF",
+          subtotal: "15.50",
+          shipment: "3.00",
+          total: "18.50",
+          comment: "Ceci est un test EmailJS",
+          order_url: window.location.origin + "/log.html#TEST"
+        };
+
+        const res = await emailjs.send("service_y2p5qvk", "template_xxx", params);
+        console.log("EmailJS result:", res);
+        alert("✅ Email de test envoyé. Vérifie la boîte du destinataire !");
+      } catch (err) {
+        console.error("Erreur EmailJS:", err);
+        alert("Erreur envoi email : " + err.message);
+      }
+    });
+  </script>
 </body>
 </html>
