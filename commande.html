@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Commander - Salhi Shop</title>
+<!-- Firebase compat CDN -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+</head>
+<body style="margin:0;font-family:Arial,Helvetica,sans-serif;background:#f0f7fa;color:#03363a;">
+
+<header style="background:#00bcd4;color:white;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;">
+  <h1 style="margin:0;">Salhi Shop</h1>
+  <div>
+    <a href="index.html" style="background:white;color:#00bcd4;padding:8px 12px;border-radius:6px;text-decoration:none;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.12);">Accueil</a>
+  </div>
+</header>
+
+<main style="padding:22px;display:flex;justify-content:center;">
+  <div style="width:100%;max-width:980px;display:grid;grid-template-columns:1fr 380px;gap:20px;">
+
+    <!-- Left: formulaire -->
+    <section style="background:white;padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(2,50,50,0.06);">
+      <h2 style="margin-top:0;color:#00bcd4;">Commander</h2>
+
+      <p style="color:#275a5b;">Remplis les informations ci-dessous et sélectionne les quantités. Tu dois être connecté et avoir vérifié ton email pour valider la commande.</p>
+
+      <!-- Contact info -->
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+        <input id="fullName" placeholder="Nom complet" style="padding:10px;border:1px solid #ccc;border-radius:8px" />
+        <input id="phone" placeholder="Téléphone (ex : 032 475 53 13)" style="padding:10px;border:1px solid #ccc;border-radius:8px" />
+        <input id="street" placeholder="Adresse (Rue, N°)" style="padding:10px;border:1px solid #ccc;border-radius:8px" />
+        <input id="city" placeholder="Ville, Code postal" style="padding:10px;border:1px solid #ccc;border-radius:8px" />
+        <input id="email" placeholder="Email" style="padding:10px;border:1px solid #ccc;border-radius:8px" />
+      </div>
+
+      <!-- Produits -->
+      <h3 style="margin-top:18px;color:#007c87;">Produits</h3>
+      <div id="productsList" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+      <!-- Demandes / commentaire -->
+      <div style="margin-top:12px;">
+        <textarea id="comment" placeholder="Commentaires / instructions (optionnel)" style="width:100%;min-height:80px;padding:10px;border:1px solid #ccc;border-radius:8px"></textarea>
+      </div>
+
+      <!-- Validation -->
+      <div style="margin-top:14px;display:flex;gap:12px;align-items:center;">
+        <button id="submitOrder" style="background:#00bcd4;color:white;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700;">Valider la commande</button>
+        <div id="orderError" style="color:red;"></div>
+      </div>
+    </section>
+
+    <!-- Right: résumé -->
+    <aside style="background:white;padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(2,50,50,0.06);height:fit-content;">
+      <h3 style="margin:0 0 8px 0;color:#00bcd4;">Récapitulatif</h3>
+      <div id="orderSummary" style="min-height:100px;color:#275a5b;"></div>
+
+      <div style="margin-top:12px;">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;"><strong>Sous-total</strong><span id="subtotal">0.00 CHF</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;"><strong>Livraison</strong><span id="shipment">0.00 CHF</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px dashed #eee;margin-top:8px;"><strong>Total</strong><strong id="total">0.00 CHF</strong></div>
+      </div>
+    </aside>
+
+  </div>
+</main>
+
+<script>
+  // Firebase config (compat)
+  const firebaseConfig = {
+    apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
+    authDomain: "salhishop-1.firebaseapp.com",
+    projectId: "salhishop-1",
+    storageBucket: "salhishop-1.firebasestorage.app",
+    messagingSenderId: "784629559774",
+    appId: "1:784629559774:web:388f9ca4c33e90d6fcad4f",
+    measurementId: "G-34G9453E7H"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // Example products (tu peux remplacer par tes vrais produits)
+  const PRODUCTS = [
+    { id: 'p1', name: 'Sandwich Jambon', price: 6.50, desc: 'Sandwich délicieux' },
+    { id: 'p2', name: 'Boisson (bouteille)', price: 2.50, desc: 'Eau ou soda' },
+    { id: 'p3', name: 'Snack (chips)', price: 1.80, desc: 'Snack individuel' },
+    { id: 'p4', name: 'Produit spécial', price: 12.00, desc: 'Article promotionnel' }
+  ];
+
+  const productsList = document.getElementById('productsList');
+  const summaryEl = document.getElementById('orderSummary');
+  const subtotalEl = document.getElementById('subtotal');
+  const totalEl = document.getElementById('total');
+  const shipmentEl = document.getElementById('shipment');
+  const submitBtn = document.getElementById('submitOrder');
+  const orderError = document.getElementById('orderError');
+
+  // build product controls
+  PRODUCTS.forEach(p => {
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.justifyContent = 'space-between';
+    row.style.alignItems = 'center';
+    row.style.gap = '8px';
+    row.innerHTML = `
+      <div style="flex:1">
+        <div style="font-weight:700">${p.name} — ${p.price.toFixed(2)} CHF</div>
+        <div style="font-size:0.9rem;color:#567">${p.desc}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button data-action="dec" data-id="${p.id}" style="padding:6px 8px;border-radius:6px;border:1px solid #ddd;cursor:pointer">−</button>
+        <input data-id="${p.id}" type="number" min="0" value="0" style="width:64px;padding:6px;border:1px solid #ccc;border-radius:6px;text-align:center" />
+        <button data-action="inc" data-id="${p.id}" style="padding:6px 8px;border-radius:6px;border:1px solid #ddd;cursor:pointer">+</button>
+      </div>
+    `;
+    productsList.appendChild(row);
+  });
+
+  // attach events
+  productsList.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const action = btn.getAttribute('data-action');
+    const id = btn.getAttribute('data-id');
+    const input = productsList.querySelector(`input[data-id="${id}"]`);
+    if (!input) return;
+    let val = parseInt(input.value || '0', 10);
+    if (action === 'inc') val++;
+    if (action === 'dec') val = Math.max(0, val - 1);
+    input.value = val;
+    renderSummary();
+  });
+
+  productsList.querySelectorAll('input[type="number"]').forEach(input => {
+    input.addEventListener('input', () => {
+      if (input.value === '' || isNaN(parseInt(input.value))) input.value = 0;
+      if (parseInt(input.value) < 0) input.value = 0;
+      renderSummary();
+    });
+  });
+
+  function renderSummary(){
+    const items = [];
+    let subtotal = 0;
+    PRODUCTS.forEach(p => {
+      const qty = parseInt(productsList.querySelector(`input[data-id="${p.id}"]`).value || '0', 10);
+      if (qty > 0) {
+        items.push({ id: p.id, name: p.name, price: p.price, qty });
+        subtotal += p.price * qty;
+      }
+    });
+    // Livraison fixe ou calcule selon conditions (ici 0 si >20 CHF)
+    const shipment = subtotal > 20 ? 0 : 3.00;
+    const total = subtotal + shipment;
+
+    // afficher
+    summaryEl.innerHTML = items.length ? items.map(it => `<div style="display:flex;justify-content:space-between;margin:6px 0"><span>${it.name} × ${it.qty}</span><span>${(it.price*it.qty).toFixed(2)} CHF</span></div>`).join('') : '<em>Aucun article sélectionné</em>';
+    subtotalEl.textContent = subtotal.toFixed(2) + ' CHF';
+    shipmentEl.textContent = shipment.toFixed(2) + ' CHF';
+    totalEl.textContent = total.toFixed(2) + ' CHF';
+  }
+
+  renderSummary();
+
+  // envoyer commande
+  submitBtn.addEventListener('click', async () => {
+    orderError.textContent = '';
+    submitBtn.disabled = true;
+
+    // récupérer données
+    const fullName = document.getElementById('fullName').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const street = document.getElementById('street').value.trim();
+    const city = document.getElementById('city').value.trim();
+    const email = document.getElementById('email').value.trim() || (auth.currentUser && auth.currentUser.email) || '';
+    const comment = document.getElementById('comment').value.trim();
+
+    // items
+    const items = [];
+    let subtotal = 0;
+    PRODUCTS.forEach(p => {
+      const qty = parseInt(productsList.querySelector(`input[data-id="${p.id}"]`).value || '0', 10);
+      if (qty > 0) {
+        items.push({ id: p.id, name: p.name, price: p.price, qty });
+        subtotal += p.price * qty;
+      }
+    });
+    if (items.length === 0) {
+      orderError.textContent = 'Sélectionne au moins un produit.';
+      submitBtn.disabled = false;
+      return;
+    }
+    if (!fullName || !phone || !street || !city) {
+      orderError.textContent = 'Remplis ton nom, téléphone et adresse.';
+      submitBtn.disabled = false;
+      return;
+    }
+
+    // vérifier utilisateur connecté et vérifié
+    const user = auth.currentUser;
+    if (!user || !user.emailVerified) {
+      orderError.textContent = 'Tu dois être connecté et avoir vérifié ton email pour commander.';
+      submitBtn.disabled = false;
+      return;
+    }
+
+    // calcul total
+    const shipment = subtotal > 20 ? 0 : 3.00;
+    const total = subtotal + shipment;
+
+    // build order object
+    const orderObj = {
+      uid: user.uid,
+      name: fullName,
+      phone,
+      street,
+      city,
+      email,
+      items,
+      subtotal,
+      shipment,
+      total,
+      comment: comment || '',
+      status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+      // push dans Firestore (orders collection)
+      await db.collection('orders').add(orderObj);
+      alert('Commande enregistrée ! Merci — tu recevras une confirmation par e-mail si activée.');
+      // reset form
+      document.getElementById('fullName').value = '';
+      document.getElementById('phone').value = '';
+      document.getElementById('street').value = '';
+      document.getElementById('city').value = '';
+      // reset quantities
+      productsList.querySelectorAll('input[type="number"]').forEach(i => i.value = 0);
+      document.getElementById('comment').value = '';
+      renderSummary();
+    } catch (err) {
+      console.error('Erreur save order', err);
+      orderError.textContent = 'Erreur lors de l\'enregistrement. Consulte la console.';
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  // Pré-remplir l'email si connecté
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      document.getElementById('email').value = user.email || '';
+    }
+  });
+</script>
+</body>
+</html>
