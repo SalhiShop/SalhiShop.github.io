@@ -91,7 +91,7 @@
       <div style="display:flex;gap:12px;align-items:center;">
         <input id="searchOrders" type="text" placeholder="Rechercher nom, email, id" style="width:360px" />
         <select id="filterStatus">
-          <option value="">Tous les statuts</option>
+          <option value="">Tous les statuts (par défaut : commandes en cours)</option>
           <option value="pending">pending</option>
           <option value="preparing">preparing</option>
           <option value="shipped">shipped</option>
@@ -107,8 +107,11 @@
 
 </div>
 
+<!-- EmailJS SDK (pour envoi côté client) -->
+<script src="https://cdn.emailjs.com/sdk/3.2.0/email.min.js"></script>
+
 <script>
-  // Firebase init (compat)
+  // ---------------- Firebase init (compat) ----------------
   const firebaseConfig = {
     apiKey: "AIzaSyByfz30HgKDfynhOXb24hSOReTJOfk77mI",
     authDomain: "salhishop-1.firebaseapp.com",
@@ -122,7 +125,12 @@
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  // DOM elements
+  // ---------------- EmailJS init ----------------
+  // Utilise ta Public API key comme "user id" côté client
+  // (NE PAS mettre la clé privée ici)
+  emailjs.init('foHh6pzezeY7gN_hC'); // <<< TA PUBLIC API KEY
+
+  // ---------------- DOM refs ----------------
   const tabUsers = document.getElementById('tabUsers');
   const tabOrders = document.getElementById('tabOrders');
   const usersPanel = document.getElementById('usersPanel');
@@ -140,7 +148,7 @@
   const filterStatus = document.getElementById('filterStatus');
   const ordersList = document.getElementById('ordersList');
 
-  // state caches
+  // caches
   let currentAdmins = [];
   let currentUsers = [];
   let currentOrders = [];
@@ -316,21 +324,19 @@
 
   searchUsers.addEventListener('input', renderUsers);
 
-  // ---------- Orders UI ----------
+  // ---------- Orders UI (avec EmailJS envoi) ----------
   function renderOrders(){
     const q = (searchOrders.value || '').trim().toLowerCase();
     const statusFilter = filterStatus.value;
-    // default show only in-progress statuses if tabOrders selected AND no explicit filter
+    // default show only in-progress statuses if no filter
     let rows = currentOrders.slice();
 
-    // if filterStatus empty, by default keep in-progress only
     if(!statusFilter){
       rows = rows.filter(r => ['pending','preparing','shipped'].includes((r.status||'').toLowerCase()));
     } else {
       rows = rows.filter(r => (r.status||'').toLowerCase() === statusFilter.toLowerCase());
     }
 
-    // search filtering
     rows = rows.filter(r => {
       const matchQ = !q || (r.name && r.name.toLowerCase().includes(q)) || (r.email && r.email.toLowerCase().includes(q)) || (r.id && r.id.toLowerCase().includes(q));
       return matchQ;
@@ -341,7 +347,6 @@
       return;
     }
 
-    // render each order
     ordersList.innerHTML = '';
     rows.forEach(order => {
       const created = (order.createdAt && order.createdAt.seconds) ? new Date(order.createdAt.seconds*1000).toLocaleString() : '—';
@@ -381,18 +386,16 @@
       ordersList.appendChild(div);
     });
 
-    // wire status selects and delete
+    // wire status selects : mise à jour + envoi EmailJS
     document.querySelectorAll('.status-select').forEach(sel => {
       sel.onchange = async () => {
         const id = sel.getAttribute('data-order-id');
         const val = sel.value;
-        try {
-          await db.collection('orders').doc(id).update({ status: val });
-          // optional: send notification/email here via Cloud Function
-        } catch(err){ console.error(err); alert('Erreur update statut: '+err.message); }
+        await updateOrderStatusAndNotify(id, val);
       };
     });
 
+    // wire deletes
     document.querySelectorAll('[data-delete-order]').forEach(btn => {
       btn.onclick = async () => {
         const id = btn.getAttribute('data-delete-order');
@@ -408,7 +411,65 @@
   searchOrders.addEventListener('input', renderOrders);
   filterStatus.addEventListener('change', renderOrders);
 
-  // tiny escape
+  // ---------- updateOrderStatusAndNotify (core) ----------
+  async function updateOrderStatusAndNotify(orderId, newStatus){
+    try {
+      const order = (currentOrders || []).find(o => o.id === orderId);
+      if(!order) { alert('Commande introuvable (cache). Recharge la page.'); return; }
+      const oldStatus = order.status || '—';
+
+      // 1) update Firestore
+      await db.collection('orders').doc(orderId).update({ status: newStatus });
+
+      // 2) préparer params pour EmailJS
+      const itemsHtml = (order.items || []).map(it =>
+        `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #eee">
+           <div>${escapeHtml(it.name)} × ${escapeHtml(String(it.qty))}</div>
+           <div>${Number(it.price * it.qty).toFixed(2)} CHF</div>
+         </div>`
+      ).join('');
+
+      const params = {
+        to_name: order.name || '',
+        to_email: order.email || '',
+        order_id: orderId,
+        old_status: oldStatus,
+        new_status: newStatus,
+        items_html: itemsHtml,
+        items_text: (order.items||[]).map(it=>`- ${it.name} × ${it.qty} → ${(it.price*it.qty).toFixed(2)} CHF`).join('\n'),
+        subtotal: (order.subtotal||0).toFixed(2),
+        shipment: (order.shipment||0).toFixed(2),
+        total: (order.total||0).toFixed(2),
+        comment: order.comment || '',
+        order_url: window.location.origin + '/log.html#' + orderId
+      };
+
+      // 3) send email via EmailJS
+      // TES IDENTIFIANTS (déjà remplis) :
+      const serviceID = 'service_y2p5qvk';       // <-- ton Service ID
+      const templateID = 'template_xxx';         // <-- ton Template ID
+
+      if (window.emailjs && typeof emailjs.send === 'function') {
+        try {
+          await emailjs.send(serviceID, templateID, params);
+          console.log('Email envoyé pour commande', orderId);
+          alert('Statut mis à jour et email envoyé au client (' + (order.email||'') + ').');
+        } catch (e) {
+          console.error('EmailJS send error', e);
+          alert('Statut mis à jour mais envoi du mail a échoué (voir console).');
+        }
+      } else {
+        console.warn('EmailJS non configuré — paramètres:', params);
+        alert('Statut mis à jour (EmailJS non configuré).');
+      }
+
+    } catch (err) {
+      console.error('Erreur updateOrderStatusAndNotify', err);
+      alert('Erreur lors de la mise à jour du statut : ' + (err.message || err));
+    }
+  }
+
+  // ---------- tiny escape ----------
   function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 </script>
